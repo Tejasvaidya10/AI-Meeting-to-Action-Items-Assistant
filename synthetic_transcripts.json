@@ -1,0 +1,25 @@
+[
+  {
+    "id": "success-001",
+    "meeting_date": "2026-10-08",
+    "transcript": "Priya will update the API error messages by Friday. Marco will review the change on Monday. The team agreed to keep the current release date.",
+    "expected_tasks": [
+      {"title": "Update the API error messages", "owner": "Priya", "due_date": "2026-10-09"},
+      {"title": "Review the API error-message change", "owner": "Marco", "due_date": "2026-10-12"}
+    ]
+  },
+  {
+    "id": "flag-001",
+    "meeting_date": "2026-10-08",
+    "transcript": "Someone should clean up the onboarding notes soon. Tejas said he can check the draft, but no date was agreed. We may already have a ticket for this.",
+    "expected_tasks": [
+      {"title": "Clean up the onboarding notes", "owner": null, "due_date": null}
+    ]
+  },
+  {
+    "id": "empty-001",
+    "meeting_date": "2026-10-08",
+    "transcript": "",
+    "expected_tasks": []
+  }
+]
