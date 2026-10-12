@@ -1,5 +1,5 @@
 """One-command classroom demonstration of the Milestone 2 workflow."""
-from meeting_assistant import ActionItem, Extraction, run_workflow, write_jsonl
+from meeting_assistant import ActionItem, Extraction, run_workflow
 
 
 def demo_extractor(_: str) -> Extraction:
@@ -28,8 +28,8 @@ state = run_workflow(
     "Someone should clean up the onboarding notes soon.",
     "2026-10-08",
     demo_extractor,
+    approve=set(),  # reviewer approves nothing yet, so the guard blocks every item
 )
-write_jsonl(state)
 
 print(f"Run: {state['run_id']}")
 print(f"Status: {state['status']}")
@@ -44,4 +44,6 @@ for candidate in state["candidates"]:
         print(f"  reasons: {', '.join(candidate['reasons'])}")
 print("\nAudit trail:")
 for event in state["events"]:
-    print(f"- {event['step']}: {event.get('result', 'started')}")
+    extra = " ".join(str(event[k]) for k in ("candidate_id", "result") if k in event)
+    print(f"- {event['step']}: {event['event']} {extra}".rstrip())
+print(f"\nLogs: logs/audit.jsonl and logs/runs/{state['run_id']}.json")

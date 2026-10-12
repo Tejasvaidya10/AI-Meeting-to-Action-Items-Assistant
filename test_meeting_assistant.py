@@ -24,6 +24,6 @@ def test_empty_input_stops_before_model():
 
 
 def test_approval_guard_blocks_unapproved_candidate():
-    state = run_workflow("text", "2026-10-08", fake_extractor)
+    state = run_workflow("text", "2026-10-08", fake_extractor, approve=set())
     assert all(c["jira_result"] is None for c in state["candidates"])
     assert state["status"] == "completed_with_items_needing_review"

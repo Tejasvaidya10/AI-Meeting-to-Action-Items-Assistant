@@ -4,7 +4,7 @@ from datetime import date
 import streamlit as st
 from dotenv import load_dotenv
 
-from meeting_assistant import ActionItem, Extraction, extract_with_openai, run_workflow, write_jsonl
+from meeting_assistant import ActionItem, Extraction, extract_with_openai, run_workflow, submit_review
 
 load_dotenv()
 st.set_page_config(page_title="Meeting-to-Action-Items Assistant", page_icon="✅", layout="wide")
@@ -38,7 +38,6 @@ if st.button("Extract and validate", type="primary"):
     try:
         state = run_workflow(transcript, meeting_date.isoformat(), extractor, open_titles={open_titles} if open_titles else None)
         st.session_state["state"] = state
-        write_jsonl(state)
     except Exception as exc:
         st.error(f"Run failed: {exc}")
 
@@ -50,6 +49,9 @@ if state:
         st.error(state["error"])
     else:
         st.info(f"Run `{state['run_id']}` — {state['status']}")
+        for err in state.get("errors", []):
+            if err["step"] == "audit":
+                st.warning(f"Logging error (run continued): {err['message']}")
         approved_ids = []
         for candidate in state["candidates"]:
             label = f"{candidate['title']} — {candidate['validation']}"
@@ -69,14 +71,7 @@ if state:
             if not approved_ids:
                 st.warning("Select at least one candidate with the checkbox above before running the handoff.")
                 st.stop()
-            for candidate in state["candidates"]:
-                if candidate["candidate_id"] in approved_ids:
-                    candidate["review_status"] = "approved"
-                    candidate["jira_result"] = f"SIM-{candidate['candidate_id'][-4:]}"
-                else:
-                    candidate["review_status"] = "needs_review"
-            state["status"] = "completed" if all(c["review_status"] != "needs_review" for c in state["candidates"]) else "completed_with_items_needing_review"
-            write_jsonl(state)
+            st.session_state["state"] = submit_review(state, set(approved_ids))
             st.success("Approval guard completed. Approved items received simulated Jira keys.")
             st.rerun()
 

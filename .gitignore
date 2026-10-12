@@ -4,5 +4,6 @@ __pycache__/
 .pytest_cache/
 *.py[cod]
 execution_log.jsonl
+logs/
 *.log
 .DS_Store

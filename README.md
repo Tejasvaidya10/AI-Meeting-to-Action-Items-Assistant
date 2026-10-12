@@ -28,7 +28,7 @@ The tests exercise a successful owner/date validation, a FLAG branch for unresol
 python demo.py
 ```
 
-This prints one valid candidate, one FLAG candidate, the approval guard blocking both until review, and the audit trail. It also appends the run to `execution_log.jsonl`.
+This prints one valid candidate, one FLAG candidate, the approval guard blocking both until review, and the audit trail. Every step is written to `logs/audit.jsonl` and a snapshot of the run is saved to `logs/runs/<run_id>.json` (see **Run state and audit log** below).
 
 ## Streamlit UI demo
 
@@ -43,7 +43,7 @@ Open the local URL shown by Streamlit, keep `Demo (no API key)` selected, click 
 
 ```python
 from dotenv import load_dotenv
-from meeting_assistant import extract_with_openai, run_workflow, write_jsonl
+from meeting_assistant import extract_with_openai, run_workflow
 
 load_dotenv()
 state = run_workflow(
@@ -51,11 +51,18 @@ state = run_workflow(
     meeting_date="2026-10-08",
     extractor=extract_with_openai,
 )
-write_jsonl(state)
 print(state)
 ```
 
 The model returns only candidates. Candidates with missing or unresolved owners/dates are marked `FLAG`. A candidate reaches the simulated Jira handoff only after an explicit approval set is supplied; `PASS` does not imply approval.
+
+## Run state and audit log
+
+- `state.py` (Task Status Tracker): one `RunState` per run. It holds `run_id`, `status`, the meeting date, the transcript's SHA-256 hash and length (never the text), the extraction, candidates, `retry_count` per step, `errors`, `events`, and a timestamp for each status. Status flow: `started → input_validated → extracted → awaiting_review → completed | completed_with_items_needing_review`, or `failed`.
+- `audit.py` (Audit Logger): appends one JSON line per event to `logs/audit.jsonl` (time, run_id, step, event, status, retry counts, details) and writes the full state to `logs/runs/<run_id>.json` after each phase. A failed log write is recorded in `errors` and never stops the run.
+- `submit_review(state, approved_ids)` applies reviewer approvals, runs the approval guard and simulated Jira handoff, and closes the run. The Streamlit UI uses it, so its approvals are logged too.
+
+Reconstruct one run: `grep '"run_id": "run-xxxxxxxx"' logs/audit.jsonl`.
 
 ## Synthetic data
 
@@ -63,4 +70,4 @@ The model returns only candidates. Candidates with missing or unresolved owners/
 
 ## Milestone 2 evidence to capture
 
-Run the tests and one keyed hosted-model run, then copy the run ID, candidate validation results, retry/stop event (if exercised), and simulated Jira result into Sections 4 and 5 of the working draft. The JSONL log is the execution record; it intentionally excludes credentials.
+Run the tests and one keyed hosted-model run, then copy the run ID, candidate validation results, retry/stop event (if exercised), and simulated Jira result into Sections 4 and 5 of the working draft. `logs/audit.jsonl` and `logs/runs/` are the execution record; it intentionally excludes credentials.
