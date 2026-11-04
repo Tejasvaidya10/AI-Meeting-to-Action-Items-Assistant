@@ -1,125 +1,133 @@
-# AI Meeting-to-Action-Items Assistant (Team 8)
+# AI Meeting-to-Action-Items Assistant
 
-Milestone 3 adds a human review checkpoint, event-driven processing, durable SQLite state and crash recovery. See **Milestone 3** below and `docs/M3_design.md`. The Milestone 2 description follows it.
+Team 8, Enterprise AI: Anusha Bellavara, Gouri Sharma, Kriday Kallalathil, Shubhada Mandala, Tejas Vaidya.
 
-## Milestone 3
+The assistant turns a meeting transcript into proposed Jira issues. A model extracts candidate tasks, local rules check each one (PASS or FLAG), and **a named person must approve each issue before it is created**. Milestone 3 makes this event-driven and durable: a run can wait days for a reviewer, survive a restart, and never create the same issue twice.
 
-```bash
-python3 -m pip install -r requirements.txt
-pytest -q                                   # 31 tests; no API key needed
-python m3_scenarios.py                      # evidence for the four report cases
+```
+transcript event ─► extract (LLM) ─► validate (owner, date, duplicate) ─► review checkpoint ─► Approval Guard ─► Jira
+                                                                       organizer, then lead     exact version,
+                                                                       24h + 48h, then expire   24h expiry, ≤3 tries
 ```
 
-Saved outputs quoted in the report are in `evidence/`: `pytest.txt`, `m3_scenarios.txt`, `cli_drill.txt` (the walk-through below as separate processes, regenerate with `python evidence/cli_drill.py > evidence/cli_drill.txt`) and `eval_mock.txt`.
+| Status | Component |
+|---|---|
+| Implemented | Event handler with inbox dedup, review checkpoint with escalation and expiry, Approval Guard, SQLite state, outbox with reconcile-before-retry, CLI reviewer, Streamlit UI (Milestone 2 path) |
+| Simulated | Jira (`jira_sim.py`, its own database plus fault injection); meeting webhook and timer (CLI commands) |
+| Planned | Live Jira, Slack/email summary, cloud deployment (PostgreSQL, containers) |
 
-Walk through the event path. Each command is a separate process, so state survives between them in `data/workflow.db`, and the simulated Jira receiver keeps its own `data/jira_sim.db`:
+## Quick start
+
+Requires Python 3.11+ (tested on 3.13). No API key is needed for the tests or the demos.
+
+```bash
+git clone https://github.com/Tejasvaidya10/AI-Meeting-to-Action-Items-Assistant.git
+cd AI-Meeting-to-Action-Items-Assistant
+git checkout shubhada/m3-hitl-events
+python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
+
+pytest -q                       # 31 tests, all passing
+python m3_scenarios.py          # the four Milestone 3 report cases
+python evidence/cli_drill.py    # full CLI walk-through as separate processes
+```
+
+## Milestone 3: try the event path yourself
+
+Each command is a separate process. State survives between them in `data/workflow.db`, and the simulated Jira keeps its own `data/jira_sim.db`. Every command first runs `resume()`, as a restarted service would.
 
 ```bash
 python cli.py emit sample_events/01_transcript_success.json      # new meeting -> 3 open reviews
 python cli.py emit sample_events/02_transcript_redelivered.json  # same event_id -> duplicate_ignored
-python cli.py reviews                                            # the review queue
-python cli.py review <review_id> --as shubhada                   # see the packet, approve/reject/edit
-python cli.py jira                                               # count issues actually created
-python cli.py tick --now 2026-11-01T00:00:00Z                    # escalate / expire / retry
-python cli.py run <run_id>                                       # audit trail of one run
+python cli.py reviews                                            # the review queue, with full packets
+python cli.py review <review_id> --as shubhada                   # approve (a), reject (r) or edit then approve (e)
+python cli.py jira                                               # issues actually in the simulated Jira
+python cli.py tick --now 2026-11-10T00:00:00Z                    # timer: escalate, expire, retry
+python cli.py run <run_id>                                       # full audit trail of one run
 ```
 
 Failure drills:
 
 ```bash
-python cli.py review <id> --as shubhada --crash-before-send      # approval saved, process stops before Jira
-python cli.py resume                                             # restart: finishes it exactly once
-JIRA_FAULT=lose_confirmation python cli.py review <id> --as shubhada   # issue created, response lost -> uncertain
-python cli.py resume                                             # finds the issue by idempotency label, no resend
-JIRA_FAULT=unavailable python cli.py review <id> --as shubhada   # 503 -> queued, retried on the next tick
+python cli.py review <id> --as shubhada --crash-before-send            # approval saved, process stops before Jira
+python cli.py resume                                                   # restart finishes it exactly once
+JIRA_FAULT=lose_confirmation python cli.py review <id> --as shubhada   # issue created, reply lost -> uncertain
+python cli.py resume                                                   # finds the issue by its label, no resend
+JIRA_FAULT=unavailable python cli.py review <id> --as shubhada         # 503 -> queued, retried on next start or tick
 ```
 
-Evaluation on the 8 hand-labeled transcripts in `labeled_transcripts.json`:
+To start over, delete the `data/` folder.
 
-```bash
-python evaluate_m3.py --extractor openai    # needs OPENAI_API_KEY; saves raw output, run IDs, tokens to eval_results/
-python evaluate_m3.py --extractor mock      # rule-based baseline
-```
+### What the reviewer approves
 
-| File | Component |
+The review packet shows the proposed action and target, the exact fields to send, the transcript quote, the validation result, any conflicts, the rules that apply and a **content version** (SHA-256 of the fields). An approval authorizes one action (`jira.create_issue`), one target (project MTG, assignee), that content version, by that approver, until approval time + 24 h. The Approval Guard re-checks the version and expiry just before calling Jira. A FLAG item with no owner or date cannot be approved as-is (`needs_changes`); the reviewer edits it and the approval binds to the edited version.
+
+### Events and outcomes
+
+| Situation | Outcome | State change |
+|---|---|---|
+| Same `event_id` delivered again | `duplicate_ignored` | none |
+| Same meeting and transcript, new `event_id` | `duplicate_content` | none, returns the existing run |
+| Second approval click | `already_decided` | none (`actions.review_id` is unique) |
+| Decision after expiry | `late_ignored` | review expired, nothing sent |
+| Old content version or non-reviewer | `stale_version` / `unauthorized` | none |
+| Unknown type, missing fields, unknown review | `unsupported_type` / `malformed` / `unknown_review` | none, kept in the inbox |
+| No decision in 24 h, then 48 h more | escalated to the project lead, then `expired` | action withheld |
+| Jira 503 | action `queued`, retried; `failed` + alert after 3 attempts | |
+| Jira created the issue but the reply was lost | action `uncertain`; Jira searched by label before any retry | `done`, no duplicate |
+
+Design details, state tables and the oversight approach are in [`docs/M3_design.md`](docs/M3_design.md).
+
+## Evidence
+
+Saved outputs quoted in the Milestone 3 report:
+
+| File | Contents |
 |---|---|
-| `controller.py` | Workflow Controller, review checkpoint, Approval Guard, outbox execution, reconcile |
-| `store.py` | Durable state: runs, reviews, actions (outbox), inbox (event dedup) |
-| `jira_sim.py` | Simulated Jira receiver with fault injection |
-| `cli.py` | Reviewer and operator interface |
-| `mock_extractor.py` | Deterministic extractor for keyless runs |
-| `evaluate_m3.py` | Labeled-set evaluation (precision/recall, owner/date accuracy, false PASS, tokens) |
+| `evidence/pytest.txt` | All 31 tests, verbose |
+| `evidence/m3_scenarios.txt` | The four required cases, with run IDs and Jira issue counts |
+| `evidence/cli_drill.txt` | CLI walk-through as separate processes, with database reads between steps (3 approvals → 3 issues) |
+| `evidence/eval_mock.txt` | Labeled-set evaluation of the rule-based baseline |
 
-# Milestone 2 Prototype
+Run IDs change on every run; the outcomes and counts do not.
 
-This prototype implements Tejas Vaidya's Milestone 2 work: a hosted-model extraction path, strict structured output, deterministic owner/date/duplicate validation, synthetic inputs, bounded schema retry, approval gating, simulated Jira handoff, and JSONL execution logging.
+## Evaluation on labeled transcripts
 
-## Setup
+`labeled_transcripts.json` holds 8 hand-labeled transcripts (11 expected tasks: 3 clear cases, 5 ambiguous).
 
 ```bash
-cd Project
-python3 -m venv .venv
-source .venv/bin/activate       # Windows: .venv\\Scripts\\activate
-python -m pip install -r requirements.txt
-cp .env.example .env
+python evaluate_m3.py --extractor mock      # rule-based baseline, no key
+python evaluate_m3.py --extractor openai    # hosted model; needs OPENAI_API_KEY
 ```
 
-Set `OPENAI_API_KEY` in `.env` (or the shell) and optionally change `OPENAI_MODEL`. Never commit `.env` or an API key.
+Each run saves the run ID, the model's raw output, validation per candidate, tokens and latency to `eval_results/`. Baseline: recall 0.55, precision 0.86, owner accuracy 1.00, date accuracy 0.83, PASS/FLAG agreement 1.00, 1 false PASS. The hosted-model run was not completed before the Milestone 3 submission.
 
-## Run the deterministic tests
+For the hosted path, copy `.env.example` to `.env` and set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`, default `gpt-4o-mini`). `.env` is git-ignored; never commit a key.
+
+## Milestone 2 path (still works)
 
 ```bash
-pytest -q
+python demo.py          # one PASS and one FLAG candidate, guard and audit trail, no key
+streamlit run app.py    # review UI; keep "Demo (no API key)" selected unless a key is set
 ```
 
-The tests exercise a successful owner/date validation, a FLAG branch for unresolved fields, empty-input stopping, and the approval guard. They do not call the hosted model.
+`state.py` keeps one `RunState` per run (status per step, transcript SHA-256 hash rather than text, retries, errors). `audit.py` appends events to `logs/audit.jsonl` and snapshots to `logs/runs/<run_id>.json`.
 
-## Professor demo (no API key required)
+## Repository layout
 
-```bash
-python demo.py
-```
+| File | Role |
+|---|---|
+| `controller.py` | Workflow controller: events, review checkpoint, Approval Guard, outbox execution, reconcile |
+| `store.py` | SQLite state: `runs`, `reviews`, `actions` (outbox), `inbox` (event dedup) |
+| `jira_sim.py` | Simulated Jira receiver with fault injection (`JIRA_FAULT`) |
+| `cli.py` | Reviewer and operator command line |
+| `meeting_assistant.py` | Extraction (OpenAI structured output), validation, Milestone 2 workflow |
+| `mock_extractor.py` | Deterministic rule-based extractor for keyless runs |
+| `evaluate_m3.py`, `labeled_transcripts.json` | Labeled-set evaluation |
+| `m3_scenarios.py`, `evidence/` | Report cases and saved outputs |
+| `sample_events/` | Example events for the CLI |
+| `test_m3_workflow.py`, `test_run_state.py`, `test_meeting_assistant.py` | 17 + 11 + 3 tests |
+| `app.py`, `demo.py`, `state.py`, `audit.py` | Milestone 2 UI, demo, run state, audit log |
+| `docs/M3_design.md` | Milestone 3 design notes |
 
-This prints one valid candidate, one FLAG candidate, the approval guard blocking both until review, and the audit trail. Every step is written to `logs/audit.jsonl` and a snapshot of the run is saved to `logs/runs/<run_id>.json` (see **Run state and audit log** below).
-
-## Streamlit UI demo
-
-```bash
-python3 -m pip install -r requirements.txt
-streamlit run app.py
-```
-
-Open the local URL shown by Streamlit, keep `Demo (no API key)` selected, click **Extract and validate**, review the PASS/FLAG results, select an item, and click **Run approval guard and Jira handoff**. Choose `Hosted model (OpenAI)` only after setting `OPENAI_API_KEY` in `.env`.
-
-## Use the hosted model path
-
-```python
-from dotenv import load_dotenv
-from meeting_assistant import extract_with_openai, run_workflow
-
-load_dotenv()
-state = run_workflow(
-    transcript="Priya will update the API error messages by Friday.",
-    meeting_date="2026-10-08",
-    extractor=extract_with_openai,
-)
-print(state)
-```
-
-The model returns only candidates. Candidates with missing or unresolved owners/dates are marked `FLAG`. A candidate reaches the simulated Jira handoff only after an explicit approval set is supplied; `PASS` does not imply approval.
-
-## Run state and audit log
-
-- `state.py` (Task Status Tracker): one `RunState` per run. It holds `run_id`, `status`, the meeting date, the transcript's SHA-256 hash and length (never the text), the extraction, candidates, `retry_count` per step, `errors`, `events`, and a timestamp for each status. Status flow: `started → input_validated → extracted → awaiting_review → completed | completed_with_items_needing_review`, or `failed`.
-- `audit.py` (Audit Logger): appends one JSON line per event to `logs/audit.jsonl` (time, run_id, step, event, status, retry counts, details) and writes the full state to `logs/runs/<run_id>.json` after each phase. A failed log write is recorded in `errors` and never stops the run.
-- `submit_review(state, approved_ids)` applies reviewer approvals, runs the approval guard and simulated Jira handoff, and closes the run. The Streamlit UI uses it, so its approvals are logged too.
-
-Reconstruct one run: `grep '"run_id": "run-xxxxxxxx"' logs/audit.jsonl`.
-
-## Synthetic data
-
-`synthetic_transcripts.json` contains representative success, ambiguous/FLAG, and empty-input cases. Extend it with hand-labeled transcripts for the team's larger evaluation set.
-
-## Milestone 2 evidence to capture
-
-Run the tests and one keyed hosted-model run, then copy the run ID, candidate validation results, retry/stop event (if exercised), and simulated Jira result into Sections 4 and 5 of the working draft. `logs/audit.jsonl` and `logs/runs/` are the execution record; it intentionally excludes credentials.
+Only synthetic transcripts are used. No credentials or private data are in this repository.
