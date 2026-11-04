@@ -1,5 +1,7 @@
 # Milestone 3 design: human checkpoint, events, durable state
 
+Architecture diagram: [`M3_Architecture.drawio`](M3_Architecture.drawio) (open in draw.io; PNG export alongside).
+
 Code: `controller.py` (Workflow Controller, Approval Guard), `store.py` (durable state),
 `jira_sim.py` (simulated receiver), `cli.py` (reviewer interface), `test_m3_workflow.py`.
 
