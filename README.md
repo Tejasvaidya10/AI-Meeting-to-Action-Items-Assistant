@@ -27,7 +27,7 @@ git checkout shubhada/m3-hitl-events
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 python -m pip install -r requirements.txt
 
-pytest -q                       # 31 tests, all passing
+pytest -q                       # 32 tests, all passing
 python m3_scenarios.py          # the four Milestone 3 report cases
 python evidence/cli_drill.py    # full CLI walk-through as separate processes
 ```
@@ -84,10 +84,11 @@ Saved outputs quoted in the Milestone 3 report:
 
 | File | Contents |
 |---|---|
-| `evidence/pytest.txt` | All 31 tests, verbose |
+| `evidence/pytest.txt` | All 32 tests, verbose |
 | `evidence/m3_scenarios.txt` | The four required cases, with run IDs and Jira issue counts |
 | `evidence/cli_drill.txt` | CLI walk-through as separate processes, with database reads between steps (3 approvals → 3 issues) |
 | `evidence/eval_mock.txt` | Labeled-set evaluation of the rule-based baseline |
+| `evidence/eval_openai.txt` | Labeled-set evaluation of gpt-4o-mini (full record in `eval_results/`) |
 
 Run IDs change on every run; the outcomes and counts do not.
 
@@ -100,7 +101,7 @@ python evaluate_m3.py --extractor mock      # rule-based baseline, no key
 python evaluate_m3.py --extractor openai    # hosted model; needs OPENAI_API_KEY
 ```
 
-Each run saves the run ID, the model's raw output, validation per candidate, tokens and latency to `eval_results/`. Baseline: recall 0.55, precision 0.86, owner accuracy 1.00, date accuracy 0.83, PASS/FLAG agreement 1.00, 1 false PASS. The hosted-model run was not completed before the Milestone 3 submission.
+Each run saves the run ID, the model's raw output, validation per candidate, tokens and latency to `eval_results/`. Baseline: recall 0.55, precision 0.86, owner accuracy 1.00, date accuracy 0.83, PASS/FLAG agreement 1.00, 1 false PASS. gpt-4o-mini (`eval_results/openai-20261104-183902.json`): recall 1.00, precision 0.92, owner accuracy 0.91, date accuracy 0.91, PASS/FLAG agreement 1.00, 0 false PASS, 1,742 input / 590 output tokens for all 8 transcripts.
 
 For the hosted path, copy `.env.example` to `.env` and set `OPENAI_API_KEY` (and optionally `OPENAI_MODEL`, default `gpt-4o-mini`). `.env` is git-ignored; never commit a key.
 
@@ -126,7 +127,7 @@ streamlit run app.py    # review UI; keep "Demo (no API key)" selected unless a 
 | `evaluate_m3.py`, `labeled_transcripts.json` | Labeled-set evaluation |
 | `m3_scenarios.py`, `evidence/` | Report cases and saved outputs |
 | `sample_events/` | Example events for the CLI |
-| `test_m3_workflow.py`, `test_run_state.py`, `test_meeting_assistant.py` | 17 + 11 + 3 tests |
+| `test_m3_workflow.py`, `test_run_state.py`, `test_meeting_assistant.py` | 17 + 11 + 4 tests |
 | `app.py`, `demo.py`, `state.py`, `audit.py` | Milestone 2 UI, demo, run state, audit log |
 | `docs/M3_design.md` | Milestone 3 design notes |
 

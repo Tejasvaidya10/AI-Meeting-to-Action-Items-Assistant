@@ -1,0 +1,370 @@
+{
+  "summary": {
+    "extractor": "openai",
+    "model": "gpt-4o-mini-2024-07-18",
+    "cases": 8,
+    "task_recall": 1.0,
+    "task_precision": 0.92,
+    "owner_accuracy": 0.91,
+    "due_date_accuracy": 0.91,
+    "validation_agreement": 1.0,
+    "false_pass": 0,
+    "input_tokens": 1742,
+    "output_tokens": 590,
+    "avg_input_tokens_per_transcript": 218,
+    "avg_output_tokens_per_transcript": 74
+  },
+  "cases": [
+    {
+      "id": "L1-clear",
+      "kind": "clear",
+      "run_id": "run-ac1ebdff",
+      "status": "awaiting_review",
+      "model_calls": [
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "raw_output": "{\"summary\":\"Action items from the meeting.\",\"decisions\":[],\"tasks\":[{\"title\":\"Update the API error messages\",\"owner_text\":\"Priya\",\"due_date_text\":\"Friday\",\"evidence\":\"Priya will update the API error messages by Friday.\"},{\"title\":\"Review the release checklist\",\"owner_text\":\"Marco\",\"due_date_text\":\"Monday\",\"evidence\":\"Marco will review the release checklist by Monday.\"}]}",
+          "input_tokens": 217,
+          "output_tokens": 83,
+          "latency_s": 1.4
+        }
+      ],
+      "candidates": [
+        {
+          "title": "Update the API error messages",
+          "owner_id": "priya",
+          "due_date": "2026-10-09",
+          "validation": "PASS",
+          "reasons": [],
+          "expected": {
+            "title": "Update the API error messages",
+            "owner": "priya",
+            "due_date": "2026-10-09",
+            "validation": "PASS"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        },
+        {
+          "title": "Review the release checklist",
+          "owner_id": "marco",
+          "due_date": "2026-10-12",
+          "validation": "PASS",
+          "reasons": [],
+          "expected": {
+            "title": "Review the release checklist",
+            "owner": "marco",
+            "due_date": "2026-10-12",
+            "validation": "PASS"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        }
+      ],
+      "missed": []
+    },
+    {
+      "id": "L2-ambiguous",
+      "kind": "ambiguous",
+      "run_id": "run-88dddb8f",
+      "status": "awaiting_review",
+      "model_calls": [
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "raw_output": "{\"summary\":\"Clean up the onboarding notes.\",\"decisions\":[],\"tasks\":[{\"title\":\"Clean up the onboarding notes\",\"owner_text\":\"Tejas\",\"due_date_text\":null,\"evidence\":\"Someone should clean up the onboarding notes soon.\"},{\"title\":\"Look at the draft of onboarding notes\",\"owner_text\":\"Tejas\",\"due_date_text\":null,\"evidence\":\"Tejas said he might look at the draft, but no date was agreed.\"}]}",
+          "input_tokens": 222,
+          "output_tokens": 92,
+          "latency_s": 1.32
+        }
+      ],
+      "candidates": [
+        {
+          "title": "Clean up the onboarding notes",
+          "owner_id": "tejas",
+          "due_date": null,
+          "validation": "FLAG",
+          "reasons": [
+            "due date is missing or cannot be normalized"
+          ],
+          "expected": {
+            "title": "Clean up the onboarding notes",
+            "owner": null,
+            "due_date": null,
+            "validation": "FLAG"
+          },
+          "owner_ok": false,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        },
+        {
+          "title": "Look at the draft of onboarding notes",
+          "owner_id": "tejas",
+          "due_date": null,
+          "validation": "FLAG",
+          "reasons": [
+            "due date is missing or cannot be normalized"
+          ],
+          "expected": null,
+          "false_pass": false
+        }
+      ],
+      "missed": []
+    },
+    {
+      "id": "L3-speakers",
+      "kind": "clear",
+      "run_id": "run-d5b4a9e0",
+      "status": "awaiting_review",
+      "model_calls": [
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "raw_output": "{\"summary\":\"Action items from the meeting.\",\"decisions\":[],\"tasks\":[{\"title\":\"Send the vendor contract to legal\",\"owner_text\":\"Anusha\",\"due_date_text\":\"Wednesday\",\"evidence\":\"Anusha: I'll send the vendor contract to legal by Wednesday.\"},{\"title\":\"Draft the test plan\",\"owner_text\":\"Gouri\",\"due_date_text\":\"2026-10-16\",\"evidence\":\"Gouri: Great. I will draft the test plan by 2026-10-16.\"}]}",
+          "input_tokens": 230,
+          "output_tokens": 103,
+          "latency_s": 1.66
+        }
+      ],
+      "candidates": [
+        {
+          "title": "Send the vendor contract to legal",
+          "owner_id": "anusha",
+          "due_date": "2026-10-14",
+          "validation": "PASS",
+          "reasons": [],
+          "expected": {
+            "title": "Send the vendor contract to legal",
+            "owner": "anusha",
+            "due_date": "2026-10-14",
+            "validation": "PASS"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        },
+        {
+          "title": "Draft the test plan",
+          "owner_id": "gouri",
+          "due_date": "2026-10-16",
+          "validation": "PASS",
+          "reasons": [],
+          "expected": {
+            "title": "Draft the test plan",
+            "owner": "gouri",
+            "due_date": "2026-10-16",
+            "validation": "PASS"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        }
+      ],
+      "missed": []
+    },
+    {
+      "id": "L4-unknown-owner",
+      "kind": "ambiguous",
+      "run_id": "run-d1e71224",
+      "status": "awaiting_review",
+      "model_calls": [
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "raw_output": "{\"summary\":\"Daniel from finance will approve the cloud budget.\",\"decisions\":[],\"tasks\":[{\"title\":\"Approve the cloud budget\",\"owner_text\":\"Daniel from finance\",\"due_date_text\":\"Friday\",\"evidence\":\"Daniel from finance will approve the cloud budget by Friday.\"}]}",
+          "input_tokens": 208,
+          "output_tokens": 55,
+          "latency_s": 0.97
+        }
+      ],
+      "candidates": [
+        {
+          "title": "Approve the cloud budget",
+          "owner_id": null,
+          "due_date": "2026-10-09",
+          "validation": "FLAG",
+          "reasons": [
+            "owner is not in the project directory"
+          ],
+          "expected": {
+            "title": "Approve the cloud budget",
+            "owner": null,
+            "due_date": "2026-10-09",
+            "validation": "FLAG"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        }
+      ],
+      "missed": []
+    },
+    {
+      "id": "L5-no-actions",
+      "kind": "clear",
+      "run_id": "run-7e8d8191",
+      "status": "awaiting_review",
+      "model_calls": [
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "raw_output": "{\"summary\":\"Reviewed last sprint's metrics with stable velocity and no blockers raised.\",\"decisions\":[],\"tasks\":[]}",
+          "input_tokens": 212,
+          "output_tokens": 23,
+          "latency_s": 0.75
+        }
+      ],
+      "candidates": [],
+      "missed": []
+    },
+    {
+      "id": "L6-duplicate",
+      "kind": "ambiguous",
+      "run_id": "run-cf8f49e3",
+      "status": "awaiting_review",
+      "model_calls": [
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "raw_output": "{\"summary\":\"Tejas will fix the login timeout.\",\"decisions\":[],\"tasks\":[{\"title\":\"Fix the login timeout\",\"owner_text\":\"Tejas\",\"due_date_text\":\"Tuesday\",\"evidence\":\"Tejas will fix the login timeout by Tuesday.\"}]}",
+          "input_tokens": 207,
+          "output_tokens": 52,
+          "latency_s": 2.1
+        }
+      ],
+      "candidates": [
+        {
+          "title": "Fix the login timeout",
+          "owner_id": "tejas",
+          "due_date": "2026-10-13",
+          "validation": "FLAG",
+          "reasons": [
+            "likely duplicate open task"
+          ],
+          "expected": {
+            "title": "Fix the login timeout",
+            "owner": "tejas",
+            "due_date": "2026-10-13",
+            "validation": "FLAG"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        }
+      ],
+      "missed": []
+    },
+    {
+      "id": "L7-relative-date",
+      "kind": "ambiguous",
+      "run_id": "run-be3e8e60",
+      "status": "awaiting_review",
+      "model_calls": [
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "raw_output": "{\"summary\":\"Action items from the meeting.\",\"decisions\":[],\"tasks\":[{\"title\":\"Book the demo room\",\"owner_text\":\"Kriday\",\"due_date_text\":\"Tomorrow\",\"evidence\":\"\\\"Kriday will book the demo room tomorrow.\\\"\"},{\"title\":\"Share the evaluation spreadsheet\",\"owner_text\":\"Marco\",\"due_date_text\":\"Friday\",\"evidence\":\"\\\"Marco will share the evaluation spreadsheet by Friday.\\\"\"}]}",
+          "input_tokens": 215,
+          "output_tokens": 82,
+          "latency_s": 1.31
+        }
+      ],
+      "candidates": [
+        {
+          "title": "Book the demo room",
+          "owner_id": "kriday",
+          "due_date": null,
+          "validation": "FLAG",
+          "reasons": [
+            "due date is missing or cannot be normalized"
+          ],
+          "expected": {
+            "title": "Book the demo room",
+            "owner": "kriday",
+            "due_date": "2026-10-09",
+            "validation": "FLAG"
+          },
+          "owner_ok": true,
+          "date_ok": false,
+          "validation_ok": true,
+          "false_pass": false
+        },
+        {
+          "title": "Share the evaluation spreadsheet",
+          "owner_id": "marco",
+          "due_date": "2026-10-09",
+          "validation": "PASS",
+          "reasons": [],
+          "expected": {
+            "title": "Share the evaluation spreadsheet",
+            "owner": "marco",
+            "due_date": "2026-10-09",
+            "validation": "PASS"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        }
+      ],
+      "missed": []
+    },
+    {
+      "id": "L8-shared-owner",
+      "kind": "ambiguous",
+      "run_id": "run-aed1bfc0",
+      "status": "awaiting_review",
+      "model_calls": [
+        {
+          "model": "gpt-4o-mini-2024-07-18",
+          "raw_output": "{\"summary\":\"The team decided to postpone the mobile release.\",\"decisions\":[\"Postpone the mobile release.\"],\"tasks\":[{\"title\":\"Update the architecture diagram\",\"owner_text\":\"Shubhada\",\"due_date_text\":\"Monday\",\"evidence\":\"Shubhada will update the architecture diagram by Monday.\"},{\"title\":\"Pair on the payment bug\",\"owner_text\":\"Priya and Marco\",\"due_date_text\":\"Friday\",\"evidence\":\"Priya and Marco will pair on the payment bug by Friday.\"}]}",
+          "input_tokens": 231,
+          "output_tokens": 100,
+          "latency_s": 1.33
+        }
+      ],
+      "candidates": [
+        {
+          "title": "Update the architecture diagram",
+          "owner_id": "shubhada",
+          "due_date": "2026-10-12",
+          "validation": "PASS",
+          "reasons": [],
+          "expected": {
+            "title": "Update the architecture diagram",
+            "owner": "shubhada",
+            "due_date": "2026-10-12",
+            "validation": "PASS"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        },
+        {
+          "title": "Pair on the payment bug",
+          "owner_id": null,
+          "due_date": "2026-10-09",
+          "validation": "FLAG",
+          "reasons": [
+            "owner is not in the project directory"
+          ],
+          "expected": {
+            "title": "Pair on the payment bug",
+            "owner": null,
+            "due_date": "2026-10-09",
+            "validation": "FLAG"
+          },
+          "owner_ok": true,
+          "date_ok": true,
+          "validation_ok": true,
+          "false_pass": false
+        }
+      ],
+      "missed": []
+    }
+  ]
+}

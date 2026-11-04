@@ -17,6 +17,18 @@ def test_validation_pass_and_flag():
     assert results[1].validation == "FLAG"
 
 
+def test_due_date_accepts_phrases_the_model_returns():
+    extraction = Extraction(summary="", decisions=[], tasks=[
+        ActionItem(title="Update diagram", owner_text="Shubhada", due_date_text="by Monday", evidence="... by Monday."),
+        ActionItem(title="Book room", owner_text="Kriday", due_date_text="tomorrow", evidence="... tomorrow."),
+        ActionItem(title="Clean notes", owner_text="Tejas", due_date_text="soon", evidence="... soon."),
+    ])
+    results = validate_candidates(extraction, date(2026, 10, 8))
+    # Relative words like "tomorrow" stay unresolved on purpose: the reviewer confirms them.
+    assert [r.due_date for r in results] == ["2026-10-12", None, None]
+    assert [r.validation for r in results] == ["PASS", "FLAG", "FLAG"]
+
+
 def test_empty_input_stops_before_model():
     state = run_workflow("", "2026-10-08", lambda _: (_ for _ in ()).throw(AssertionError("model called")))
     assert state["status"] == "failed"

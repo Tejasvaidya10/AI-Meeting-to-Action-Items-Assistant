@@ -61,6 +61,10 @@ def _parse_due_date(text: str | None, meeting_date: date) -> str | None:
     if not text:
         return None
     value = text.strip().lower()
+    # The hosted model returns the phrase as spoken ("by Friday"), so drop a leading preposition.
+    for prefix in ("by ", "on ", "before "):
+        if value.startswith(prefix):
+            value = value[len(prefix):].strip()
     weekdays = {"monday": 0, "tuesday": 1, "wednesday": 2, "thursday": 3,
                 "friday": 4, "saturday": 5, "sunday": 6}
     if value in weekdays:

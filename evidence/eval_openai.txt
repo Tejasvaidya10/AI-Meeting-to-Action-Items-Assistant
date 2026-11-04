@@ -1,0 +1,48 @@
+== eval_results/openai-20261104-183732.json  (before the 'by Friday' parser fix)
+L1-clear           run-b24e6390  predicted=2 [PASS PASS]
+L2-ambiguous       run-a2530f58  predicted=1 [FLAG]
+L3-speakers        run-0c5792ff  predicted=2 [PASS PASS]
+L4-unknown-owner   run-40a3f4ad  predicted=1 [FLAG]
+L5-no-actions      run-3dec5606  predicted=0 []
+L6-duplicate       run-8615b9e8  predicted=1 [FLAG]
+L7-relative-date   run-8f9d5049  predicted=2 [FLAG PASS]
+L8-shared-owner    run-537bfc46  predicted=2 [FLAG FLAG]
+{
+  "extractor": "openai",
+  "model": "gpt-4o-mini-2024-07-18",
+  "cases": 8,
+  "task_recall": 1.0,
+  "task_precision": 1.0,
+  "owner_accuracy": 0.91,
+  "due_date_accuracy": 0.73,
+  "validation_agreement": 0.91,
+  "false_pass": 0,
+  "input_tokens": 1742,
+  "output_tokens": 557,
+  "avg_input_tokens_per_transcript": 218,
+  "avg_output_tokens_per_transcript": 70
+}
+== eval_results/openai-20261104-183902.json  (final, reported)
+L1-clear           run-ac1ebdff  predicted=2 [PASS PASS]
+L2-ambiguous       run-88dddb8f  predicted=2 [FLAG FLAG]
+L3-speakers        run-d5b4a9e0  predicted=2 [PASS PASS]
+L4-unknown-owner   run-d1e71224  predicted=1 [FLAG]
+L5-no-actions      run-7e8d8191  predicted=0 []
+L6-duplicate       run-cf8f49e3  predicted=1 [FLAG]
+L7-relative-date   run-be3e8e60  predicted=2 [FLAG PASS]
+L8-shared-owner    run-aed1bfc0  predicted=2 [PASS FLAG]
+{
+  "extractor": "openai",
+  "model": "gpt-4o-mini-2024-07-18",
+  "cases": 8,
+  "task_recall": 1.0,
+  "task_precision": 0.92,
+  "owner_accuracy": 0.91,
+  "due_date_accuracy": 0.91,
+  "validation_agreement": 1.0,
+  "false_pass": 0,
+  "input_tokens": 1742,
+  "output_tokens": 590,
+  "avg_input_tokens_per_transcript": 218,
+  "avg_output_tokens_per_transcript": 74
+}
