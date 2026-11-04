@@ -12,7 +12,7 @@ transcript event ─► extract (LLM) ─► validate (owner, date, duplicate) �
 
 | Status | Component |
 |---|---|
-| Implemented | Event handler with inbox dedup, review checkpoint with escalation and expiry, Approval Guard, SQLite state, outbox with reconcile-before-retry, CLI reviewer, Streamlit UI (Milestone 2 path) |
+| Implemented | Event handler with inbox dedup, review checkpoint with escalation and expiry, Approval Guard, SQLite state, outbox with reconcile-before-retry, Streamlit reviewer app and CLI reviewer (same events) |
 | Simulated | Jira (`jira_sim.py`, its own database plus fault injection); meeting webhook and timer (CLI commands) |
 | Planned | Live Jira, Slack/email summary, cloud deployment (PostgreSQL, containers) |
 
@@ -27,12 +27,28 @@ git checkout shubhada/m3-hitl-events
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 python -m pip install -r requirements.txt
 
-pytest -q                       # 32 tests, all passing
+pytest -q                       # 40 tests, all passing
 python m3_scenarios.py          # the four Milestone 3 report cases
 python evidence/cli_drill.py    # full CLI walk-through as separate processes
 ```
 
-## Milestone 3: try the event path yourself
+## Milestone 3: reviewer app (Streamlit)
+
+```bash
+streamlit run app.py            # opens http://localhost:8501
+```
+
+The app drives the same Workflow Controller as the CLI, with its own data in `data/ui/`:
+
+- **New meeting**: send a `transcript.received` event; "Deliver the same event again" shows `duplicate_ignored`.
+- **Review queue**: the full review packet (proposed action, fields, evidence, conflicts, rules, content version), with Approve, Reject, or edit owner/due date then Approve. "Signed in as" picks the reviewer; anyone other than the organizer (or the project lead after escalation) gets `unauthorized`.
+- **Simulated Jira**: the issues actually in the receiver's database.
+- **Runs and audit**: run status, reviews, the outbox (attempts, Jira key) and the audit trail.
+- **Sidebar drills**: inject a Jira 503 or a lost reply for the next call, stop the process before the Jira call, advance the clock and run the timer (escalation after 24 h, expiry after 72 h), or reset the demo data.
+
+Every page load calls `resume()`, so a stopped or uncertain action is finished or reconciled on the next load. `test_app.py` drives the app headlessly (8 tests); screenshots are in `evidence/ui/`.
+
+## Milestone 3: try the event path from the command line
 
 Each command is a separate process. State survives between them in `data/workflow.db`, and the simulated Jira keeps its own `data/jira_sim.db`. Every command first runs `resume()`, as a restarted service would.
 
@@ -84,7 +100,8 @@ Saved outputs quoted in the Milestone 3 report:
 
 | File | Contents |
 |---|---|
-| `evidence/pytest.txt` | All 32 tests, verbose |
+| `evidence/pytest.txt` | All 40 tests, verbose |
+| `evidence/ui/` | Screenshots of the reviewer app after a transcript and one approval |
 | `evidence/m3_scenarios.txt` | The four required cases, with run IDs and Jira issue counts |
 | `evidence/cli_drill.txt` | CLI walk-through as separate processes, with database reads between steps (3 approvals → 3 issues) |
 | `evidence/eval_mock.txt` | Labeled-set evaluation of the rule-based baseline |
@@ -109,7 +126,6 @@ For the hosted path, copy `.env.example` to `.env` and set `OPENAI_API_KEY` (and
 
 ```bash
 python demo.py          # one PASS and one FLAG candidate, guard and audit trail, no key
-streamlit run app.py    # review UI; keep "Demo (no API key)" selected unless a key is set
 ```
 
 `state.py` keeps one `RunState` per run (status per step, transcript SHA-256 hash rather than text, retries, errors). `audit.py` appends events to `logs/audit.jsonl` and snapshots to `logs/runs/<run_id>.json`.
@@ -127,8 +143,9 @@ streamlit run app.py    # review UI; keep "Demo (no API key)" selected unless a 
 | `evaluate_m3.py`, `labeled_transcripts.json` | Labeled-set evaluation |
 | `m3_scenarios.py`, `evidence/` | Report cases and saved outputs |
 | `sample_events/` | Example events for the CLI |
-| `test_m3_workflow.py`, `test_run_state.py`, `test_meeting_assistant.py` | 17 + 11 + 4 tests |
-| `app.py`, `demo.py`, `state.py`, `audit.py` | Milestone 2 UI, demo, run state, audit log |
+| `test_m3_workflow.py`, `test_app.py`, `test_run_state.py`, `test_meeting_assistant.py` | 17 + 8 + 11 + 4 tests |
+| `app.py` | Streamlit reviewer app (Milestone 3 workflow) |
+| `demo.py`, `state.py`, `audit.py` | Milestone 2 demo, run state, audit log |
 | `docs/M3_design.md` | Milestone 3 design notes |
 
 Only synthetic transcripts are used. No credentials or private data are in this repository.
