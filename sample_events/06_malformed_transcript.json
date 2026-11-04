@@ -1,0 +1,9 @@
+{
+  "event_id": "evt-transcript-0004",
+  "type": "transcript.received",
+  "payload": {
+    "meeting_id": "empty-2026-10-10",
+    "meeting_date": "2026-10-10",
+    "organizer": "anusha"
+  }
+}

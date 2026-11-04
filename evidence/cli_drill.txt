@@ -1,0 +1,297 @@
+# Milestone 3 CLI drill: every command below is a separate process
+
+$ python cli.py emit sample_events/01_transcript_success.json
+{
+  "outcome": "run_created",
+  "run_id": "run-b5925ab5",
+  "reviews": [
+    "rev-b73c65bd",
+    "rev-0d3dbc9f",
+    "rev-9d90bfae"
+  ],
+  "event_id": "evt-transcript-0001",
+  "actions": {}
+}
+
+$ python cli.py emit sample_events/02_transcript_redelivered.json
+{
+  "event_id": "evt-transcript-0001",
+  "outcome": "duplicate_ignored",
+  "first_outcome": "run_created"
+}
+
+$ python cli.py emit sample_events/03_transcript_same_content_new_id.json
+{
+  "outcome": "duplicate_content",
+  "run_id": "run-b5925ab5",
+  "event_id": "evt-transcript-0002",
+  "actions": {}
+}
+
+$ python cli.py emit sample_events/05_unknown_event_type.json
+{
+  "outcome": "unsupported_type",
+  "detail": "unknown event type 'calendar.updated'",
+  "event_id": "evt-unknown-0001",
+  "actions": {}
+}
+
+$ python cli.py emit sample_events/06_malformed_transcript.json
+{
+  "outcome": "malformed",
+  "detail": "missing transcript",
+  "event_id": "evt-transcript-0004",
+  "actions": {}
+}
+
+$ python cli.py reviews
+
+Review rev-b73c65bd  [pending]  run run-b5925ab5  meeting sprint-2026-10-08
+  Assigned to: shubhada   escalates to: kriday   deadline: 2026-11-05T00:50:39Z
+  Proposed action: jira.create_issue in project MTG
+    summary  : Update the API error messages
+    assignee : priya
+    due_date : 2026-10-09
+  Evidence:  "Priya will update the API error messages by Friday."  (owner said: 'Priya', due said: 'Friday')
+  Validation: PASS
+  Conflicts: none
+  Rules:
+    - R1 No Jira issue is created without an explicit, unexpired approval of this exact content version.
+  Content version: v-b231fbbe3742
+
+Review rev-0d3dbc9f  [pending]  run run-b5925ab5  meeting sprint-2026-10-08
+  Assigned to: shubhada   escalates to: kriday   deadline: 2026-11-05T00:50:39Z
+  Proposed action: jira.create_issue in project MTG
+    summary  : Clean up the onboarding notes
+    assignee : -- UNRESOLVED --
+    due_date : -- UNRESOLVED --
+  Evidence:  "Someone should clean up the onboarding notes soon."  (owner said: None, due said: None)
+  Validation: FLAG
+  Conflicts: owner is missing; due date is missing or cannot be normalized
+  Rules:
+    - R1 No Jira issue is created without an explicit, unexpired approval of this exact content version.
+    - R2 The assignee must resolve to a person in the project directory.
+    - R3 The due date must normalize to a calendar date.
+  Content version: v-5b3af3bc5425
+
+Review rev-9d90bfae  [pending]  run run-b5925ab5  meeting sprint-2026-10-08
+  Assigned to: shubhada   escalates to: kriday   deadline: 2026-11-05T00:50:39Z
+  Proposed action: jira.create_issue in project MTG
+    summary  : Review the release checklist
+    assignee : marco
+    due_date : 2026-10-12
+  Evidence:  "Marco will review the release checklist on Monday."  (owner said: 'Marco', due said: 'Monday')
+  Validation: PASS
+  Conflicts: none
+  Rules:
+    - R1 No Jira issue is created without an explicit, unexpired approval of this exact content version.
+  Content version: v-94dc8d15b251
+
+3 open review(s)
+
+## Interruption: approval saved, process stops before Jira
+
+$ python cli.py review rev-b73c65bd --as shubhada --crash-before-send
+  (reviewer types: ['a'])
+
+Review rev-b73c65bd  [pending]  run run-b5925ab5  meeting sprint-2026-10-08
+  Assigned to: shubhada   escalates to: kriday   deadline: 2026-11-05T00:50:39Z
+  Proposed action: jira.create_issue in project MTG
+    summary  : Update the API error messages
+    assignee : priya
+    due_date : 2026-10-09
+  Evidence:  "Priya will update the API error messages by Friday."  (owner said: 'Priya', due said: 'Friday')
+  Validation: PASS
+  Conflicts: none
+  Rules:
+    - R1 No Jira issue is created without an explicit, unexpired approval of this exact content version.
+  Content version: v-b231fbbe3742
+
+Approve, reject, or edit then approve? [a/r/e/q]   comment (optional): SIMULATED CRASH: process stopped after committing evt-9ca992c667, before calling Jira
+
+[inspect databases, no process started] actions=[('rev-b73c65bd:v-b231fbbe3742', 'queued', 0)]  Jira issues=0
+
+$ python cli.py resume
+resume: {'rev-b73c65bd:v-b231fbbe3742': 'done'}
+
+$ python cli.py resume
+resume: nothing left open
+
+$ python cli.py jira
+MTG-1: Update the API error messages -> priya due 2026-10-09  ["idem-rev-b73c65bd:v-b231fbbe3742"]
+1 issue(s) in simulated Jira
+
+## FLAG item: approve as-is is refused, then edit + lost Jira reply
+
+$ python cli.py review rev-0d3dbc9f --as shubhada
+  (reviewer types: ['a'])
+
+Review rev-0d3dbc9f  [pending]  run run-b5925ab5  meeting sprint-2026-10-08
+  Assigned to: shubhada   escalates to: kriday   deadline: 2026-11-05T00:50:39Z
+  Proposed action: jira.create_issue in project MTG
+    summary  : Clean up the onboarding notes
+    assignee : -- UNRESOLVED --
+    due_date : -- UNRESOLVED --
+  Evidence:  "Someone should clean up the onboarding notes soon."  (owner said: None, due said: None)
+  Validation: FLAG
+  Conflicts: owner is missing; due date is missing or cannot be normalized
+  Rules:
+    - R1 No Jira issue is created without an explicit, unexpired approval of this exact content version.
+    - R2 The assignee must resolve to a person in the project directory.
+    - R3 The due date must normalize to a calendar date.
+  Content version: v-5b3af3bc5425
+
+Approve, reject, or edit then approve? [a/r/e/q]   comment (optional): {
+  "outcome": "needs_changes",
+  "review_id": "rev-0d3dbc9f",
+  "detail": "approve with edits for: owner, due date",
+  "event_id": "evt-f9ea29f029",
+  "actions": {}
+}
+
+$ JIRA_FAULT=lose_confirmation python cli.py review rev-0d3dbc9f --as shubhada
+  (reviewer types: ['e', 'tejas', '2026-10-16'])
+
+Review rev-0d3dbc9f  [pending]  run run-b5925ab5  meeting sprint-2026-10-08
+  Assigned to: shubhada   escalates to: kriday   deadline: 2026-11-05T00:50:39Z
+  Proposed action: jira.create_issue in project MTG
+    summary  : Clean up the onboarding notes
+    assignee : -- UNRESOLVED --
+    due_date : -- UNRESOLVED --
+  Evidence:  "Someone should clean up the onboarding notes soon."  (owner said: None, due said: None)
+  Validation: FLAG
+  Conflicts: owner is missing; due date is missing or cannot be normalized
+  Rules:
+    - R1 No Jira issue is created without an explicit, unexpired approval of this exact content version.
+    - R2 The assignee must resolve to a person in the project directory.
+    - R3 The due date must normalize to a calendar date.
+  Content version: v-5b3af3bc5425
+
+Approve, reject, or edit then approve? [a/r/e/q]   owner (blank = keep):   due date, e.g. Friday or 2026-10-16 (blank = keep):   comment (optional): {
+  "outcome": "approved",
+  "review_id": "rev-0d3dbc9f",
+  "idempotency_key": "rev-0d3dbc9f:v-bdfa077a88ff",
+  "event_id": "evt-dc6573df53",
+  "actions": {
+    "rev-0d3dbc9f:v-bdfa077a88ff": "uncertain"
+  }
+}
+
+[inspect databases, no process started] actions=[('rev-b73c65bd:v-b231fbbe3742', 'done', 1), ('rev-0d3dbc9f:v-bdfa077a88ff', 'uncertain', 1)]  Jira issues=2
+
+$ python cli.py resume
+resume: {'rev-0d3dbc9f:v-bdfa077a88ff': 'done'}
+
+$ python cli.py jira
+MTG-1: Update the API error messages -> priya due 2026-10-09  ["idem-rev-b73c65bd:v-b231fbbe3742"]
+MTG-2: Clean up the onboarding notes -> tejas due 2026-10-16  ["idem-rev-0d3dbc9f:v-bdfa077a88ff"]
+2 issue(s) in simulated Jira
+
+## Jira unavailable (503), retried by the next process start or tick
+
+$ JIRA_FAULT=unavailable python cli.py review rev-9d90bfae --as shubhada
+  (reviewer types: ['a'])
+
+Review rev-9d90bfae  [pending]  run run-b5925ab5  meeting sprint-2026-10-08
+  Assigned to: shubhada   escalates to: kriday   deadline: 2026-11-05T00:50:39Z
+  Proposed action: jira.create_issue in project MTG
+    summary  : Review the release checklist
+    assignee : marco
+    due_date : 2026-10-12
+  Evidence:  "Marco will review the release checklist on Monday."  (owner said: 'Marco', due said: 'Monday')
+  Validation: PASS
+  Conflicts: none
+  Rules:
+    - R1 No Jira issue is created without an explicit, unexpired approval of this exact content version.
+  Content version: v-94dc8d15b251
+
+Approve, reject, or edit then approve? [a/r/e/q]   comment (optional): {
+  "outcome": "approved",
+  "review_id": "rev-9d90bfae",
+  "idempotency_key": "rev-9d90bfae:v-94dc8d15b251",
+  "event_id": "evt-fd34898dd1",
+  "actions": {
+    "rev-9d90bfae:v-94dc8d15b251": "queued"
+  }
+}
+
+[inspect databases, no process started] actions=[('rev-b73c65bd:v-b231fbbe3742', 'done', 1), ('rev-0d3dbc9f:v-bdfa077a88ff', 'done', 1), ('rev-9d90bfae:v-94dc8d15b251', 'queued', 1)]  Jira issues=2
+
+$ python cli.py tick
+resume: {'rev-9d90bfae:v-94dc8d15b251': 'done'}
+{
+  "outcome": "tick",
+  "escalated": [],
+  "expired": [],
+  "event_id": "tick-e43c596f17",
+  "actions": {}
+}
+
+$ python cli.py jira
+MTG-1: Update the API error messages -> priya due 2026-10-09  ["idem-rev-b73c65bd:v-b231fbbe3742"]
+MTG-2: Clean up the onboarding notes -> tejas due 2026-10-16  ["idem-rev-0d3dbc9f:v-bdfa077a88ff"]
+MTG-3: Review the release checklist -> marco due 2026-10-12  ["idem-rev-9d90bfae:v-94dc8d15b251"]
+3 issue(s) in simulated Jira
+
+## Repeated approval of an already-decided review
+
+$ python cli.py review rev-b73c65bd --as shubhada
+  (reviewer types: ['a'])
+
+Review rev-b73c65bd  [approved]  run run-b5925ab5  meeting sprint-2026-10-08
+  Assigned to: shubhada   escalates to: kriday   deadline: 2026-11-05T00:50:39Z
+  Proposed action: jira.create_issue in project MTG
+    summary  : Update the API error messages
+    assignee : priya
+    due_date : 2026-10-09
+  Evidence:  "Priya will update the API error messages by Friday."  (owner said: 'Priya', due said: 'Friday')
+  Validation: PASS
+  Conflicts: none
+  Rules:
+    - R1 No Jira issue is created without an explicit, unexpired approval of this exact content version.
+  Content version: v-b231fbbe3742
+
+Approve, reject, or edit then approve? [a/r/e/q]   comment (optional): {
+  "outcome": "already_decided",
+  "review_id": "rev-b73c65bd",
+  "status": "approved",
+  "event_id": "evt-5f3f24c033",
+  "actions": {}
+}
+
+$ python cli.py jira
+MTG-1: Update the API error messages -> priya due 2026-10-09  ["idem-rev-b73c65bd:v-b231fbbe3742"]
+MTG-2: Clean up the onboarding notes -> tejas due 2026-10-16  ["idem-rev-0d3dbc9f:v-bdfa077a88ff"]
+MTG-3: Review the release checklist -> marco due 2026-10-12  ["idem-rev-9d90bfae:v-94dc8d15b251"]
+3 issue(s) in simulated Jira
+
+## Audit trail
+
+$ python cli.py run run-b5925ab5
+run-b5925ab5: completed
+  2026-11-04T00:50:39.705Z  input_check     run_started            
+  2026-11-04T00:50:39.705Z  input_check     input_valid            
+  2026-11-04T00:50:39.705Z  model_extraction model_call_started     
+  2026-11-04T00:50:39.705Z  model_extraction schema_valid           
+  2026-11-04T00:50:39.705Z  validation      validated              candidate_id=cand-b73c65bd result=PASS
+  2026-11-04T00:50:39.705Z  validation      validated              candidate_id=cand-0d3dbc9f result=FLAG
+  2026-11-04T00:50:39.705Z  validation      validated              candidate_id=cand-9d90bfae result=PASS
+  2026-11-04T00:50:39.705Z  human_review    awaiting_review        
+  2026-11-04T00:50:39.706Z  human_review    review_requested       candidate_id=cand-b73c65bd
+  2026-11-04T00:50:39.706Z  human_review    review_requested       candidate_id=cand-0d3dbc9f
+  2026-11-04T00:50:39.706Z  human_review    review_requested       candidate_id=cand-9d90bfae
+  2026-11-04T00:50:40.379Z  human_review    review_decision        candidate_id=cand-b73c65bd result=approved
+  2026-11-04T00:50:40.492Z  jira_handoff    jira_call_started      candidate_id=cand-b73c65bd
+  2026-11-04T00:50:40.493Z  jira_handoff    created                candidate_id=cand-b73c65bd result=MTG-1
+  2026-11-04T00:50:40.829Z  approval_guard  blocked                candidate_id=cand-0d3dbc9f result=BLOCKED reason=unresolved owner, due date
+  2026-11-04T00:50:40.941Z  human_review    review_decision        candidate_id=cand-0d3dbc9f result=approved
+  2026-11-04T00:50:40.942Z  jira_handoff    jira_call_started      candidate_id=cand-0d3dbc9f
+  2026-11-04T00:50:40.943Z  jira_handoff    outcome_uncertain      candidate_id=cand-0d3dbc9f error=read timeout after request was sent
+  2026-11-04T00:50:41.058Z  jira_handoff    reconciled_found       candidate_id=cand-0d3dbc9f
+  2026-11-04T00:50:41.059Z  jira_handoff    created                candidate_id=cand-0d3dbc9f result=MTG-2
+  2026-11-04T00:50:41.284Z  human_review    review_decision        candidate_id=cand-9d90bfae result=approved
+  2026-11-04T00:50:41.285Z  jira_handoff    jira_call_started      candidate_id=cand-9d90bfae
+  2026-11-04T00:50:41.286Z  jira_handoff    jira_unavailable       candidate_id=cand-9d90bfae error=503 Service Unavailable
+  2026-11-04T00:50:41.398Z  jira_handoff    jira_call_started      candidate_id=cand-9d90bfae
+  2026-11-04T00:50:41.399Z  jira_handoff    created                candidate_id=cand-9d90bfae result=MTG-3
+  2026-11-04T00:50:41.399Z  audit           run_completed          result=completed

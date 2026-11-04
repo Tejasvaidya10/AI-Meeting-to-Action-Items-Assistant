@@ -1,0 +1,7 @@
+{
+  "event_id": "evt-unknown-0001",
+  "type": "calendar.updated",
+  "payload": {
+    "meeting_id": "sprint-2026-10-08"
+  }
+}

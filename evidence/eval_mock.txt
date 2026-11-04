@@ -1,0 +1,24 @@
+L1-clear           run-c95119b9  expected=2 predicted=2 [PASS PASS]  status=awaiting_review
+L2-ambiguous       run-4f354c24  expected=1 predicted=1 [FLAG]  status=awaiting_review
+L3-speakers        run-521e4e90  expected=2 predicted=0 []  status=awaiting_review
+L4-unknown-owner   run-c55750e0  expected=1 predicted=0 []  status=awaiting_review
+L5-no-actions      run-4c38bf51  expected=0 predicted=0 []  status=awaiting_review
+L6-duplicate       run-5307f1e9  expected=1 predicted=1 [FLAG]  status=awaiting_review
+L7-relative-date   run-c693e97b  expected=2 predicted=2 [FLAG PASS]  status=awaiting_review
+L8-shared-owner    run-dedc3120  expected=2 predicted=1 [PASS!]  status=awaiting_review
+{
+  "extractor": "mock",
+  "model": null,
+  "cases": 8,
+  "task_recall": 0.55,
+  "task_precision": 0.86,
+  "owner_accuracy": 1.0,
+  "due_date_accuracy": 0.83,
+  "validation_agreement": 1.0,
+  "false_pass": 1,
+  "input_tokens": 0,
+  "output_tokens": 0,
+  "avg_input_tokens_per_transcript": 0,
+  "avg_output_tokens_per_transcript": 0
+}
+Saved eval_results/mock-20261103-195059.json

@@ -42,7 +42,7 @@ class CandidateResult(BaseModel):
     evidence: str
     validation: Literal["PASS", "FLAG"]
     reasons: list[str]
-    review_status: Literal["needs_review", "approved", "rejected"] = "needs_review"
+    review_status: Literal["needs_review", "approved", "rejected", "expired"] = "needs_review"
     jira_result: str | None = None
 
 
@@ -50,7 +50,6 @@ DIRECTORY = {
     "anusha": {"name": "Anusha", "jira_id": "anusha"},
     "gouri": {"name": "Gouri", "jira_id": "gouri"},
     "kriday": {"name": "Kriday", "jira_id": "kriday"},
-    "mourya": {"name": "Mourya", "jira_id": "mourya"},
     "tejas": {"name": "Tejas", "jira_id": "tejas"},
     "shubhada": {"name": "Shubhada", "jira_id": "shubhada"},
     "marco": {"name": "Marco", "jira_id": "marco"},
@@ -108,11 +107,12 @@ def extract_with_openai(transcript: str, model: str | None = None, client: Any =
         from openai import OpenAI
         client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
     model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
-    schema = Extraction.model_json_schema()
-    response = client.chat.completions.create(
+    # parse() converts the Pydantic model to a strict-mode schema (every key required,
+    # no defaults); the raw model_json_schema() is rejected by strict mode.
+    response = client.chat.completions.parse(
         model=model,
         temperature=0,
-        response_format={"type": "json_schema", "json_schema": {"name": "meeting_extraction", "strict": True, "schema": schema}},
+        response_format=Extraction,
         messages=[
             {"role": "system", "content": "Extract only explicit action items. Never invent owners or dates. Return the required JSON schema and include exact transcript evidence."},
             {"role": "user", "content": transcript},

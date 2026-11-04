@@ -1,0 +1,40 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.1, pytest-9.0.2, pluggy-1.6.0 -- /Library/Frameworks/Python.framework/Versions/3.13/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/shubhadamandala/Desktop/Enterprise AI/AI-Meeting-to-Action-Items-Assistant
+plugins: anyio-4.11.0
+collecting ... collected 31 items
+
+test_m3_workflow.py::test_approved_run_creates_exactly_the_approved_issue PASSED [  3%]
+test_m3_workflow.py::test_rejection_withholds_action PASSED              [  6%]
+test_m3_workflow.py::test_timeout_escalates_then_expires_and_late_decision_is_ignored PASSED [  9%]
+test_m3_workflow.py::test_project_lead_can_decide_after_escalation PASSED [ 12%]
+test_m3_workflow.py::test_missing_decision_never_creates_a_task PASSED   [ 16%]
+test_m3_workflow.py::test_duplicate_decision_event_creates_one_issue PASSED [ 19%]
+test_m3_workflow.py::test_redelivered_transcript_does_not_start_second_run PASSED [ 22%]
+test_m3_workflow.py::test_unavailable_jira_is_retried_on_tick_without_duplicate PASSED [ 25%]
+test_m3_workflow.py::test_retry_limit_fails_and_alerts PASSED            [ 29%]
+test_m3_workflow.py::test_pending_review_survives_restart PASSED         [ 32%]
+test_m3_workflow.py::test_crash_after_approval_is_resumed_once PASSED    [ 35%]
+test_m3_workflow.py::test_lost_confirmation_is_reconciled_not_resent PASSED [ 38%]
+test_m3_workflow.py::test_crash_mid_send_with_nothing_created_retries PASSED [ 41%]
+test_m3_workflow.py::test_flag_item_needs_edits_before_approval PASSED   [ 45%]
+test_m3_workflow.py::test_stale_content_version_is_refused PASSED        [ 48%]
+test_m3_workflow.py::test_approval_expires_if_not_executed_in_time PASSED [ 51%]
+test_m3_workflow.py::test_unexpected_and_malformed_events_change_nothing PASSED [ 54%]
+test_meeting_assistant.py::test_validation_pass_and_flag PASSED          [ 58%]
+test_meeting_assistant.py::test_empty_input_stops_before_model PASSED    [ 61%]
+test_meeting_assistant.py::test_approval_guard_blocks_unapproved_candidate PASSED [ 64%]
+test_run_state.py::test_run_pauses_for_review_without_approvals PASSED   [ 67%]
+test_run_state.py::test_status_sequence_is_timestamped PASSED            [ 70%]
+test_run_state.py::test_transcript_text_is_not_persisted PASSED          [ 74%]
+test_run_state.py::test_audit_log_reconstructs_run PASSED                [ 77%]
+test_run_state.py::test_schema_retry_is_counted_and_logged PASSED        [ 80%]
+test_run_state.py::test_second_schema_failure_fails_run_and_writes_snapshot PASSED [ 83%]
+test_run_state.py::test_submit_review_logs_decision_guard_and_jira PASSED [ 87%]
+test_run_state.py::test_rejected_item_is_blocked_and_counts_as_resolved PASSED [ 90%]
+test_run_state.py::test_failed_log_write_is_recorded_and_does_not_stop_run PASSED [ 93%]
+test_run_state.py::test_guard_blocks_approved_item_with_unresolved_fields PASSED [ 96%]
+test_run_state.py::test_resubmitting_never_creates_a_second_issue PASSED [100%]
+
+============================== 31 passed in 0.22s ==============================

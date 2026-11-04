@@ -1,0 +1,142 @@
+{
+  "_labeling_rules": [
+    "A task is an explicit commitment ('will', 'I'll', 'should' + task). 'might look at' is not a commitment.",
+    "owner is the project-directory id, or null when nobody, an unknown person, or more than one person is named.",
+    "due_date is the true calendar date (meeting 2026-10-08 is a Thursday), even where the deterministic parser cannot resolve it (L7 'tomorrow').",
+    "validation is what the system rules SHOULD output: FLAG for unresolved owner/date or a likely duplicate."
+  ],
+  "cases": [
+    {
+      "id": "L1-clear",
+      "kind": "clear",
+      "meeting_date": "2026-10-08",
+      "transcript": "Priya will update the API error messages by Friday. Marco will review the release checklist by Monday.",
+      "expected_tasks": [
+        {
+          "title": "Update the API error messages",
+          "owner": "priya",
+          "due_date": "2026-10-09",
+          "validation": "PASS"
+        },
+        {
+          "title": "Review the release checklist",
+          "owner": "marco",
+          "due_date": "2026-10-12",
+          "validation": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "L2-ambiguous",
+      "kind": "ambiguous",
+      "meeting_date": "2026-10-08",
+      "transcript": "Someone should clean up the onboarding notes soon. Tejas said he might look at the draft, but no date was agreed.",
+      "expected_tasks": [
+        {
+          "title": "Clean up the onboarding notes",
+          "owner": null,
+          "due_date": null,
+          "validation": "FLAG"
+        }
+      ]
+    },
+    {
+      "id": "L3-speakers",
+      "kind": "clear",
+      "meeting_date": "2026-10-08",
+      "transcript": "Anusha: I'll send the vendor contract to legal by Wednesday.\nGouri: Great. I will draft the test plan by 2026-10-16.",
+      "expected_tasks": [
+        {
+          "title": "Send the vendor contract to legal",
+          "owner": "anusha",
+          "due_date": "2026-10-14",
+          "validation": "PASS"
+        },
+        {
+          "title": "Draft the test plan",
+          "owner": "gouri",
+          "due_date": "2026-10-16",
+          "validation": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "L4-unknown-owner",
+      "kind": "ambiguous",
+      "meeting_date": "2026-10-08",
+      "transcript": "Daniel from finance will approve the cloud budget by Friday.",
+      "expected_tasks": [
+        {
+          "title": "Approve the cloud budget",
+          "owner": null,
+          "due_date": "2026-10-09",
+          "validation": "FLAG"
+        }
+      ]
+    },
+    {
+      "id": "L5-no-actions",
+      "kind": "clear",
+      "meeting_date": "2026-10-08",
+      "transcript": "We reviewed last sprint's metrics. Velocity was stable and nobody raised blockers.",
+      "expected_tasks": []
+    },
+    {
+      "id": "L6-duplicate",
+      "kind": "ambiguous",
+      "meeting_date": "2026-10-08",
+      "open_titles": [
+        "Fix the login timeout"
+      ],
+      "transcript": "Tejas will fix the login timeout by Tuesday.",
+      "expected_tasks": [
+        {
+          "title": "Fix the login timeout",
+          "owner": "tejas",
+          "due_date": "2026-10-13",
+          "validation": "FLAG"
+        }
+      ]
+    },
+    {
+      "id": "L7-relative-date",
+      "kind": "ambiguous",
+      "meeting_date": "2026-10-08",
+      "transcript": "Kriday will book the demo room tomorrow. Marco will share the evaluation spreadsheet by Friday.",
+      "expected_tasks": [
+        {
+          "title": "Book the demo room",
+          "owner": "kriday",
+          "due_date": "2026-10-09",
+          "validation": "FLAG"
+        },
+        {
+          "title": "Share the evaluation spreadsheet",
+          "owner": "marco",
+          "due_date": "2026-10-09",
+          "validation": "PASS"
+        }
+      ]
+    },
+    {
+      "id": "L8-shared-owner",
+      "kind": "ambiguous",
+      "meeting_date": "2026-10-08",
+      "transcript": "The team decided to postpone the mobile release. Shubhada will update the architecture diagram by Monday, and Priya and Marco will pair on the payment bug by Friday.",
+      "expected_tasks": [
+        {
+          "title": "Update the architecture diagram",
+          "owner": "shubhada",
+          "due_date": "2026-10-12",
+          "validation": "PASS"
+        },
+        {
+          "title": "Pair on the payment bug",
+          "owner": null,
+          "due_date": "2026-10-09",
+          "validation": "FLAG"
+        }
+      ]
+    }
+  ]
+}

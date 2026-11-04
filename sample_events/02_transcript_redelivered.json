@@ -1,0 +1,10 @@
+{
+  "event_id": "evt-transcript-0001",
+  "type": "transcript.received",
+  "payload": {
+    "meeting_id": "sprint-2026-10-08",
+    "meeting_date": "2026-10-08",
+    "organizer": "shubhada",
+    "transcript": "Priya will update the API error messages by Friday. Someone should clean up the onboarding notes soon. Marco will review the release checklist on Monday."
+  }
+}

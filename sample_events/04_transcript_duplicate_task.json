@@ -1,0 +1,13 @@
+{
+  "event_id": "evt-transcript-0003",
+  "type": "transcript.received",
+  "payload": {
+    "meeting_id": "design-2026-10-09",
+    "meeting_date": "2026-10-09",
+    "organizer": "gouri",
+    "transcript": "Tejas will fix the login timeout by Tuesday.",
+    "open_titles": [
+      "Fix the login timeout"
+    ]
+  }
+}

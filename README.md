@@ -1,3 +1,55 @@
+# AI Meeting-to-Action-Items Assistant (Team 8)
+
+Milestone 3 adds a human review checkpoint, event-driven processing, durable SQLite state and crash recovery. See **Milestone 3** below and `docs/M3_design.md`. The Milestone 2 description follows it.
+
+## Milestone 3
+
+```bash
+python3 -m pip install -r requirements.txt
+pytest -q                                   # 31 tests; no API key needed
+python m3_scenarios.py                      # evidence for the four report cases
+```
+
+Saved outputs quoted in the report are in `evidence/`: `pytest.txt`, `m3_scenarios.txt`, `cli_drill.txt` (the walk-through below as separate processes, regenerate with `python evidence/cli_drill.py > evidence/cli_drill.txt`) and `eval_mock.txt`.
+
+Walk through the event path. Each command is a separate process, so state survives between them in `data/workflow.db`, and the simulated Jira receiver keeps its own `data/jira_sim.db`:
+
+```bash
+python cli.py emit sample_events/01_transcript_success.json      # new meeting -> 3 open reviews
+python cli.py emit sample_events/02_transcript_redelivered.json  # same event_id -> duplicate_ignored
+python cli.py reviews                                            # the review queue
+python cli.py review <review_id> --as shubhada                   # see the packet, approve/reject/edit
+python cli.py jira                                               # count issues actually created
+python cli.py tick --now 2026-11-01T00:00:00Z                    # escalate / expire / retry
+python cli.py run <run_id>                                       # audit trail of one run
+```
+
+Failure drills:
+
+```bash
+python cli.py review <id> --as shubhada --crash-before-send      # approval saved, process stops before Jira
+python cli.py resume                                             # restart: finishes it exactly once
+JIRA_FAULT=lose_confirmation python cli.py review <id> --as shubhada   # issue created, response lost -> uncertain
+python cli.py resume                                             # finds the issue by idempotency label, no resend
+JIRA_FAULT=unavailable python cli.py review <id> --as shubhada   # 503 -> queued, retried on the next tick
+```
+
+Evaluation on the 8 hand-labeled transcripts in `labeled_transcripts.json`:
+
+```bash
+python evaluate_m3.py --extractor openai    # needs OPENAI_API_KEY; saves raw output, run IDs, tokens to eval_results/
+python evaluate_m3.py --extractor mock      # rule-based baseline
+```
+
+| File | Component |
+|---|---|
+| `controller.py` | Workflow Controller, review checkpoint, Approval Guard, outbox execution, reconcile |
+| `store.py` | Durable state: runs, reviews, actions (outbox), inbox (event dedup) |
+| `jira_sim.py` | Simulated Jira receiver with fault injection |
+| `cli.py` | Reviewer and operator interface |
+| `mock_extractor.py` | Deterministic extractor for keyless runs |
+| `evaluate_m3.py` | Labeled-set evaluation (precision/recall, owner/date accuracy, false PASS, tokens) |
+
 # Milestone 2 Prototype
 
 This prototype implements Tejas Vaidya's Milestone 2 work: a hosted-model extraction path, strict structured output, deterministic owner/date/duplicate validation, synthetic inputs, bounded schema retry, approval gating, simulated Jira handoff, and JSONL execution logging.

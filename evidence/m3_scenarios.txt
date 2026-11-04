@@ -1,0 +1,27 @@
+
+=== 1. Approved run
+run run-3be6a932: decision=approved action=done key=rev-b4a5cf2e:v-b231fbbe3742
+run status=completed  Jira issues=1  MTG-1 -> priya due 2026-10-09
+
+=== 2a. Rejection
+run run-7817cf06: decision=rejected  actions=0  Jira issues=0
+
+=== 2b. Timeout: no decision
+run run-33a1728b: +25h escalated=2  +73h expired=2  late decision=late_ignored
+run status=completed_with_items_needing_review  actions=0  Jira issues=0
+
+=== 3. Duplicate events and retry
+transcript redelivered=duplicate_ignored  first decision=approved -> action queued (Jira 503)
+same decision event=duplicate_ignored  second click=already_decided  Jira issues before retry=0
+after tick: action=done attempts=2  runs=1  Jira issues=1
+
+=== 4a. Interruption: crash after approval, before Jira
+crash: process stopped after committing evt-d1, before calling Jira
+saved action=queued  Jira issues=0
+restart resume={'rev-c31606cd:v-b231fbbe3742': 'done'}  second resume={}  Jira issues=1
+
+=== 4b. Uncertain outcome: issue created, reply lost
+decision -> action uncertain  Jira issues=1 (it was created)
+restart resume={'rev-8e56b21b:v-b231fbbe3742': 'done'}
+action=done attempts=1 jira_key=MTG-1  Jira issues=1
+audit: jira_call_started -> outcome_uncertain -> reconciled_found -> created

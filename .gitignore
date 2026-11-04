@@ -7,3 +7,4 @@ execution_log.jsonl
 logs/
 *.log
 .DS_Store
+data/
