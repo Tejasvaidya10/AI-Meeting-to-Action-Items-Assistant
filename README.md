@@ -13,7 +13,7 @@ transcript event ─► extract (LLM) ─► validate (owner, date, duplicate) �
 | Status | Component |
 |---|---|
 | Implemented | Event handler with inbox dedup, review checkpoint with escalation and expiry, Approval Guard, SQLite state, outbox with reconcile-before-retry, Streamlit reviewer app and CLI reviewer (same events) |
-| Simulated | Jira (`jira_sim.py`, its own database plus fault injection); meeting webhook and timer (CLI commands) |
+| Simulated | Jira (`jira_sim.py`, its own database plus fault injection); meeting webhook and timer (CLI commands or buttons in the app) |
 | Planned | Live Jira, Slack/email summary, cloud deployment (PostgreSQL, containers) |
 
 ## Quick start
@@ -38,15 +38,17 @@ python evidence/cli_drill.py    # full CLI walk-through as separate processes
 streamlit run app.py            # opens http://localhost:8501
 ```
 
-The app drives the same Workflow Controller as the CLI, with its own data in `data/ui/`:
+![Review queue in the reviewer app](evidence/ui/app_review_queue.png)
+
+The app drives the same Workflow Controller as the CLI, with its own data in `data/ui/`. The top bar shows the team, a link to this repository, the Jira environment and the signed-in reviewer with their role. Below it, an overview card counts open reviews, escalations, Jira issues and runs, with a bar showing every review by status (pending, escalated, approved, rejected, expired). Results of each action appear as plain sentences with the outcome code beside them (for example "Approved. The Jira action is done." `approved`).
 
 - **New meeting**: send a `transcript.received` event; "Deliver the same event again" shows `duplicate_ignored`.
-- **Review queue**: the full review packet (proposed action, fields, evidence, conflicts, rules, content version), with Approve, Reject, or edit owner/due date then Approve. "Signed in as" picks the reviewer; anyone other than the organizer (or the project lead after escalation) gets `unauthorized`.
-- **Simulated Jira**: the issues actually in the receiver's database.
+- **Review queue**: one card per proposed issue with the full review packet: PASS/FLAG and status, the transcript quote, action, assignee and due date, conflicts, the policy checks (R1–R3) and the content version; Approve, Reject, or edit owner/due date then Approve. "Signed in as" picks the reviewer; anyone other than the organizer (or the project lead after escalation) gets `unauthorized`.
+- **Simulated Jira**: the issues actually in the receiver's database, with their idempotency labels.
 - **Runs and audit**: run status, reviews, the outbox (attempts, Jira key) and the audit trail.
-- **Sidebar drills**: inject a Jira 503 or a lost reply for the next call, stop the process before the Jira call, advance the clock and run the timer (escalation after 24 h, expiry after 72 h), or reset the demo data.
+- **Sidebar (Controls)**: choose the signed-in reviewer and the extractor; under Simulation, inject a Jira 503 or a lost reply for the next call, stop the process before the Jira call, advance the clock and run the timer (escalation after 24 h, expiry after 72 h), or reset the demo data.
 
-Every page load calls `resume()`, so a stopped or uncertain action is finished or reconciled on the next load. `test_app.py` drives the app headlessly (8 tests); screenshots are in `evidence/ui/`.
+Every page load calls `resume()`, so a stopped or uncertain action is finished or reconciled on the next load. `test_app.py` drives the app headlessly (8 tests); screenshots are in `evidence/ui/`. The colour theme is in `.streamlit/config.toml`.
 
 ## Milestone 3: try the event path from the command line
 
@@ -101,7 +103,7 @@ Saved outputs quoted in the Milestone 3 report:
 | File | Contents |
 |---|---|
 | `evidence/pytest.txt` | All 40 tests, verbose |
-| `evidence/ui/` | Screenshots of the reviewer app: new meeting, review queue, Jira after one approval, audit, and an escalated review |
+| `evidence/ui/` | Screenshots of the reviewer app: new meeting, review queue, a single review card, Jira after one approval, audit, and an escalated review |
 | `evidence/m3_scenarios.txt` | The four required cases, with run IDs and Jira issue counts |
 | `evidence/cli_drill.txt` | CLI walk-through as separate processes, with database reads between steps (3 approvals → 3 issues) |
 | `evidence/eval_mock.txt` | Labeled-set evaluation of the rule-based baseline |
@@ -144,7 +146,7 @@ python demo.py          # one PASS and one FLAG candidate, guard and audit trail
 | `m3_scenarios.py`, `evidence/` | Report cases and saved outputs |
 | `sample_events/` | Example events for the CLI |
 | `test_m3_workflow.py`, `test_app.py`, `test_run_state.py`, `test_meeting_assistant.py` | 17 + 8 + 11 + 4 tests |
-| `app.py` | Streamlit reviewer app (Milestone 3 workflow) |
+| `app.py`, `.streamlit/config.toml` | Streamlit reviewer app (Milestone 3 workflow) and its theme |
 | `demo.py`, `state.py`, `audit.py` | Milestone 2 demo, run state, audit log |
 | `docs/M3_design.md` | Milestone 3 design notes |
 
