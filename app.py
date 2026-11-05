@@ -93,6 +93,13 @@ h1, h2, h3 {font-family: Inter, -apple-system, sans-serif !important; font-weigh
 .notice {display:flex; align-items:baseline; border: 1px solid var(--warn-line); border-left: 4px solid #F59E0B; background: #FFFBEB;
          color: var(--warn); border-radius: 12px; padding: 11px 15px; margin-bottom: 14px; font-size: .9rem;}
 
+/* plain icons */
+.ic {display:inline-block; vertical-align: -2px; margin-right: 6px; flex-shrink: 0; color: #64748B;}
+.notice .ic, .conflict .ic {color: currentColor; margin-right: 8px; vertical-align: -3px;}
+.meta dt {display:flex; align-items:center;}
+.stTabs [data-baseweb="tab"] [data-testid="stIconMaterial"] {color: #94A3B8;}
+.stTabs [aria-selected="true"] [data-testid="stIconMaterial"] {color: var(--primary);}
+
 /* segmented tabs */
 .stTabs [data-baseweb="tab-list"] {background: var(--subtle); border: 1px solid var(--line); border-radius: 14px; padding: 5px; gap: 4px;}
 .stTabs [data-baseweb="tab"] {border-radius: 10px; padding: 9px 16px; height: auto; color: var(--muted); font-weight: 500;}
@@ -136,6 +143,25 @@ h1, h2, h3 {font-family: Inter, -apple-system, sans-serif !important; font-weigh
 :focus-visible {outline: 2px solid var(--primary) !important; outline-offset: 3px;}
 </style>
 """.replace("DOTS", DOTS)
+
+
+# Plain line icons (Lucide paths, 24px grid), drawn in the surrounding text colour.
+ICONS = {
+    "inbox": '<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    "clock": '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    "ticket": '<path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 17v2M13 11v2"/>',
+    "history": '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M12 7v5l4 2"/>',
+    "user": '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    "arrow-up": '<path d="M7 17 17 7M7 7h10v10"/>',
+    "calendar": '<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    "lock": '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    "alert": '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/>',
+}
+
+
+def icon(name: str, size: int = 14) -> str:
+    return (f'<svg class="ic" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{ICONS[name]}</svg>')
 
 
 st.set_page_config(page_title="Meeting-to-Action-Items Assistant", page_icon=":material/task_alt:", layout="wide")
@@ -199,10 +225,10 @@ def overview(counts: dict[str, int], jira: int, runs: int) -> str:
     legend = "".join(f'<span class="lg"><i class="dot s-{k}"></i>{label} <b>{counts.get(k, 0)}</b></span>' for k, label in order)
     open_n = counts.get("pending", 0) + counts.get("escalated", 0)
     return (f'<div class="overview"><div class="ov-top">'
-            f'<div><div class="ov-n">{open_n}</div><div class="ov-k">open reviews</div></div>'
-            f'<div><div class="ov-n{" warn" if counts.get("escalated") else ""}">{counts.get("escalated", 0)}</div><div class="ov-k">escalated</div></div>'
-            f'<div><div class="ov-n">{jira}</div><div class="ov-k">issues in Jira</div></div>'
-            f'<div><div class="ov-n">{runs}</div><div class="ov-k">runs</div></div></div>'
+            f'<div><div class="ov-n">{open_n}</div><div class="ov-k">{icon("inbox")}open reviews</div></div>'
+            f'<div><div class="ov-n{" warn" if counts.get("escalated") else ""}">{counts.get("escalated", 0)}</div><div class="ov-k">{icon("clock")}escalated</div></div>'
+            f'<div><div class="ov-n">{jira}</div><div class="ov-k">{icon("ticket")}issues in Jira</div></div>'
+            f'<div><div class="ov-n">{runs}</div><div class="ov-k">{icon("history")}runs</div></div></div>'
             f'<div class="bar">{bar or "<span class=seg style=flex:1></span>"}</div>'
             f'<div class="legend">{legend}<span class="lg muted">{total} reviews in total</span></div></div>')
 
@@ -239,15 +265,15 @@ with st.sidebar:
     st.caption(f"Simulated time **+{ss['clock_offset_h']} h** · {now:%a %d %b, %H:%M} UTC")
     hours = st.number_input("Advance by hours", min_value=1, max_value=200, value=25, step=1)
     c1, c2 = st.columns(2)
-    if c1.button("Advance", width="stretch"):
+    if c1.button("Advance", icon=":material/fast_forward:", width="stretch"):
         ss["clock_offset_h"] += int(hours)
         st.rerun()
-    if c2.button("Timer tick", key="tick", width="stretch"):
+    if c2.button("Timer tick", key="tick", icon=":material/timer:", width="stretch"):
         send({"event_id": f"tick-{uuid.uuid4().hex[:10]}", "type": "timer.tick", "payload": {}})
         st.rerun()
 
     st.divider()
-    if st.button("Reset demo data", type="secondary", width="stretch"):
+    if st.button("Reset demo data", icon=":material/restart_alt:", type="secondary", width="stretch"):
         shutil.rmtree(DATA_DIR, ignore_errors=True)
         for key in ("clock_offset_h", "messages", "last_transcript_event"):
             ss.pop(key, None)
@@ -279,11 +305,11 @@ escalated = [r for r in open_reviews if r["status"] == "escalated"]
 counts = {r["status"]: r["n"] for r in wf.store.all("SELECT status, COUNT(*) AS n FROM reviews GROUP BY status")}
 st.markdown(overview(counts, wf.jira.count(), wf.store.one("SELECT COUNT(*) AS n FROM runs")["n"]), unsafe_allow_html=True)
 if escalated:
-    st.markdown(f'<div class="notice"><span class="tag">Escalated</span><span><b>{len(escalated)} review(s) escalated to {html.escape(PROJECT_LEAD)}.</b> '
+    st.markdown(f'<div class="notice">{icon("clock", 16)}<span class="tag">Escalated</span><span><b>{len(escalated)} review(s) escalated to {html.escape(PROJECT_LEAD)}.</b> '
                 "They expire 48 h after escalation, and the issue is then withheld.</span></div>", unsafe_allow_html=True)
 
-tab_new, tab_queue, tab_jira, tab_runs = st.tabs(["New meeting", f"Review queue ({len(open_reviews)})",
-                                                  f"Simulated Jira ({wf.jira.count()})", "Runs and audit"])
+tab_new, tab_queue, tab_jira, tab_runs = st.tabs([":material/edit_note: New meeting", f":material/fact_check: Review queue ({len(open_reviews)})",
+                                                  f":material/confirmation_number: Simulated Jira ({wf.jira.count()})", ":material/history: Runs and audit"])
 
 # ------------------------------------------------------------- new meeting
 with tab_new:
@@ -293,7 +319,7 @@ with tab_new:
         meeting_date = c2.date_input("Meeting date", value=date(2026, 10, 8))
         organizer = c3.selectbox("Organizer (reviewer)", PEOPLE, index=PEOPLE.index("shubhada"))
         transcript = st.text_area("Transcript", value=SAMPLE, height=130)
-        submitted = st.form_submit_button("Send transcript event", type="primary")
+        submitted = st.form_submit_button("Send transcript event", type="primary", icon=":material/send:")
     if submitted:
         event = {"event_id": f"evt-{uuid.uuid4().hex[:10]}", "type": "transcript.received",
                  "payload": {"meeting_id": meeting_id, "meeting_date": meeting_date.isoformat(),
@@ -305,7 +331,7 @@ with tab_new:
         c1, c2 = st.columns([3, 2], vertical_alignment="center")
         c1.caption(f"Last event sent: `{ss['last_transcript_event']['event_id']}`. "
                    "A webhook may deliver it twice; the inbox ignores the repeat.")
-        if c2.button("Deliver the same event again (webhook retry)", key="redeliver", width="stretch"):
+        if c2.button("Deliver the same event again (webhook retry)", key="redeliver", icon=":material/replay:", width="stretch"):
             send(ss["last_transcript_event"])
             st.rerun()
 
@@ -325,16 +351,16 @@ with tab_queue:
                     + f'<div class="quote">“{html.escape(p["evidence"]["quote"])}”</div>'
                     + '<div class="grid">' + field("Action", p["proposed_action"]["action"])
                     + field("Assignee", fields["assignee"]) + field("Due date", fields["due_date"]) + "</div>"
-                    + ('<div class="conflict"><span class="tag">Conflict</span>' + html.escape("; ".join(p["conflicts"])) + "</div>" if p["conflicts"] else "")
+                    + ('<div class="conflict">' + icon("alert", 15) + '<span class="tag">Conflict</span>' + html.escape("; ".join(p["conflicts"])) + "</div>" if p["conflicts"] else "")
                     + '<ul class="rules">' + "".join(f"<li>{html.escape(r)}</li>" for r in p["rules"]) + "</ul>",
                     unsafe_allow_html=True)
             with right:
                 st.markdown(
                     '<dl class="meta">'
-                    f'<dt>Reviewer</dt><dd>{html.escape(review["assigned_to"])}</dd>'
-                    f'<dt>Escalates to</dt><dd>{html.escape(review["escalation_to"])}</dd>'
-                    f'<dt>Deadline</dt><dd>{html.escape(review["deadline"].replace("T", " ").replace("Z", " UTC"))}</dd>'
-                    f'<dt>Version</dt><dd><code>{html.escape(p["content_version"])}</code></dd></dl>',
+                    f'<dt>{icon("user")}Reviewer</dt><dd>{html.escape(review["assigned_to"])}</dd>'
+                    f'<dt>{icon("arrow-up")}Escalates to</dt><dd>{html.escape(review["escalation_to"])}</dd>'
+                    f'<dt>{icon("calendar")}Deadline</dt><dd>{html.escape(review["deadline"].replace("T", " ").replace("Z", " UTC"))}</dd>'
+                    f'<dt>{icon("lock")}Version</dt><dd><code>{html.escape(p["content_version"])}</code></dd></dl>',
                     unsafe_allow_html=True)
                 with st.form(f"decide-{review['review_id']}", border=False):
                     c1, c2 = st.columns(2)
@@ -342,8 +368,8 @@ with tab_queue:
                     due = c2.text_input("Due date", value=fields["due_date"] or "", placeholder="Friday or 2026-10-16")
                     comment = st.text_input("Comment (optional)")
                     b1, b2 = st.columns(2)
-                    approve = b1.form_submit_button("Approve", type="primary", width="stretch")
-                    reject = b2.form_submit_button("Reject", width="stretch")
+                    approve = b1.form_submit_button("Approve", type="primary", icon=":material/check:", width="stretch")
+                    reject = b2.form_submit_button("Reject", icon=":material/close:", width="stretch")
                 if approve or reject:
                     edits = {k: v.strip() for k, v, old in (("owner", owner, fields["assignee"]), ("due_date", due, fields["due_date"]))
                              if v.strip() and v.strip() != (old or "")}
