@@ -113,12 +113,37 @@ table.issues code {background: var(--subtle); color: #475569; border-radius: 6px
 [data-testid="stSidebar"] [data-baseweb="input"] input, [data-testid="stSidebar"] [data-testid="stNumberInputContainer"] button
     {background: var(--subtle) !important;}
 
+/* nav bar */
+.nav {display:flex; align-items:center; justify-content:space-between; gap: 16px; height: 58px; padding: 0 18px; margin-bottom: 18px;
+      background: rgba(255,255,255,.82); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 1px 2px rgba(15,23,42,.04);}
+.nav-l, .nav-r {display:flex; align-items:center; gap: 12px;}
+.nav-brand {font-weight: 800; font-size: 1.02rem; color: var(--ink); letter-spacing: -.02em;}
+.nav-sep {width: 1px; height: 20px; background: var(--line);}
+.nav-team {font-size: .82rem; color: var(--muted);}
+.nav-link {font-size: .84rem; font-weight: 600; color: #334155 !important; text-decoration: none !important; padding: 6px 10px; border-radius: 8px;}
+.nav-link:hover {background: var(--subtle); color: var(--primary) !important;}
+.avatar {width: 32px; height: 32px; border-radius: 50%; display:grid; place-items:center; font-size: .72rem; font-weight: 700;
+         color: #fff; background: linear-gradient(135deg, #6366F1, #8B5CF6);}
+.nav-user {display:flex; flex-direction:column; line-height: 1.15; font-size: .82rem; color: var(--ink);}
+.nav-user small {font-size: .7rem; color: var(--muted);}
+.side-title {font-size: 1rem; font-weight: 800; color: var(--ink); letter-spacing: -.02em; margin: 2px 0 2px;}
+/* faded dot grid behind the top of the page */
+[data-testid="stAppViewContainer"]::before {content:''; position: absolute; inset: 0 0 auto 0; height: 560px; pointer-events: none;
+    background: DOTS; opacity: .22; z-index: 0;
+    -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.5) 45%, transparent 100%);
+    mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.5) 45%, transparent 100%);}
+[data-testid="stMain"] {position: relative; z-index: 1;}
+
 /* console header */
-.console {background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 18px 22px 14px; margin-bottom: 14px;
-          box-shadow: 0 1px 2px rgba(15,23,42,.04);}
+.console {position: relative; isolation: isolate; overflow: hidden; border-radius: 16px; padding: 20px 24px 14px; margin-bottom: 14px;
+          background: radial-gradient(circle at 95% 0%, #E0E7FF 0, rgba(224,231,255,0) 48%), var(--card);
+          border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(15,23,42,.04);}
+.console:before {content:''; position:absolute; inset:0; z-index:-1; background: DOTS; opacity:.22;
+                 -webkit-mask-image: linear-gradient(270deg, #000, transparent 60%); mask-image: linear-gradient(270deg, #000, transparent 60%);}
 .console-top {display:flex; justify-content:space-between; align-items:flex-start; gap: 16px;}
 .crumb {font-size: .75rem; color: var(--muted); font-weight: 500;} .crumb span {margin: 0 6px; color: #CBD5E1;}
-.console-title {font-size: 1.55rem !important; margin: 4px 0 4px !important; padding: 0 !important; color: var(--ink);}
+.console-title {font-size: 1.55rem !important; margin: 0 0 4px !important; padding: 0 !important; color: var(--ink);}
 .console-sub {font-size: .88rem; color: var(--muted); max-width: 640px;}
 .chips {display:flex; gap: 8px; flex-wrap: wrap; justify-content:flex-end;}
 .chip {font-size: .76rem; color: #334155; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px;
@@ -307,9 +332,7 @@ if recovered:
 
 # ------------------------------------------------------------------ sidebar
 with st.sidebar:
-    st.markdown('<div class="brand"><div class="brand-mark"><i></i><i></i><i></i><i></i></div>'
-                '<div class="brand-name">Action Items</div></div>'
-                '<div class="brand-sub">TEAM 8 · REVIEWER CONSOLE</div>', unsafe_allow_html=True)
+    st.markdown('<div class="side-title">Controls</div>', unsafe_allow_html=True)
     side_heading("Reviewer")
     reviewer = st.selectbox("Signed in as", PEOPLE, index=PEOPLE.index("shubhada"), key="reviewer",
                             help=f"The organizer reviews first; {PROJECT_LEAD} (project lead) may decide after escalation.")
@@ -343,16 +366,23 @@ with st.sidebar:
         st.rerun()
 
 # ------------------------------------------------------------------ header
+REPO = "https://github.com/Tejasvaidya10/AI-Meeting-to-Action-Items-Assistant/tree/shubhada/m3-hitl-events"
+role = "Project lead" if reviewer == PROJECT_LEAD else "Reviewer"
+st.markdown(
+    '<div class="nav"><div class="nav-l"><div class="brand-mark"><i></i><i></i><i></i><i></i></div>'
+    '<span class="nav-brand">Action Items</span><span class="nav-sep"></span><span class="nav-team">Team 8 · Milestone 3</span></div>'
+    f'<div class="nav-r"><a class="nav-link" href="{REPO}" target="_blank">Repository</a>'
+    '<span class="chip"><i class="live"></i>Jira: simulated</span>'
+    f'<span class="avatar">{html.escape(reviewer[:2].upper())}</span>'
+    f'<span class="nav-user"><b>{html.escape(reviewer)}</b><small>{role}</small></span></div></div>',
+    unsafe_allow_html=True)
+
 steps = [("Event", ""), ("Extract", ""), ("Validate", ""), ("Human review", "human"), ("Approval Guard", "human"),
          ("Jira", "jira")]
 st.markdown(
-    '<div class="console"><div class="console-top"><div>'
-    '<div class="crumb">Meeting-to-Action-Items Assistant <span>/</span> Review console</div>'
-    '<h1 class="console-title">Review console</h1>'
+    '<div class="console"><h1 class="console-title">Review console</h1>'
     '<div class="console-sub">Approve, edit or reject each proposed Jira issue. Nothing is created without an approval, '
-    'and decisions survive restarts.</div></div>'
-    '<div class="chips"><span class="chip"><i class="live"></i>Jira: simulated</span>'
-    f'<span class="chip">Signed in as <b>{html.escape(reviewer)}</b></span></div></div>'
+    'and decisions survive restarts.</div>'
     '<div class="steps">' + '<span class="sep"></span>'.join(
         f'<span class="stp {kind}"><b>{n}</b>{label}</span>' for n, (label, kind) in enumerate(steps, 1)) + '</div></div>',
     unsafe_allow_html=True)
