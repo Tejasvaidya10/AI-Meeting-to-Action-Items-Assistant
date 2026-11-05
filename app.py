@@ -274,7 +274,7 @@ MESSAGES = {
     "process_stopped": "Process stopped before calling Jira (crash drill). The approval is saved and is completed on restart.",
     "malformed": "The event is missing required fields and was ignored.",
     "unsupported_type": "Unknown event type. It was recorded and ignored.",
-    "run_failed": "Extraction failed. The run was stopped before review.",
+    "run_failed": "Extraction failed. The run was stopped before review and an alert was logged. Send the transcript again to retry.",
 }
 
 

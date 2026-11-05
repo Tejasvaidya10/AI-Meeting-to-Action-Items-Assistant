@@ -110,14 +110,18 @@ class Workflow:
         if missing:
             return {"outcome": "malformed", "detail": f"missing {', '.join(missing)}"}
         sha = hashlib.sha256(p["transcript"].encode("utf-8")).hexdigest()
-        existing = self.store.one("SELECT run_id FROM runs WHERE meeting_id = ? AND transcript_sha256 = ?",
-                                  p["meeting_id"], sha)
+        # Only a live run makes a resend a duplicate; after a failed run the organizer may resend.
+        existing = self.store.one("SELECT run_id FROM runs WHERE meeting_id = ? AND transcript_sha256 = ?"
+                                  " AND status <> 'failed'", p["meeting_id"], sha)
         if existing:  # same meeting resent under a new event_id (e.g. webhook redelivery)
             return {"outcome": "duplicate_content", "run_id": existing["run_id"]}
 
         run = run_workflow(p["transcript"], p["meeting_date"], self.extractor,
                            open_titles=set(p.get("open_titles") or []), log_dir=self.log_dir)
         state = RunState.model_validate(run)
+        if state.status == "failed":  # the failed run is kept for the audit trail
+            self.audit.log(state, "monitoring", "alert", reason=state.error, next="organizer resends the transcript")
+            self.audit.snapshot(state)
         self.store.execute("INSERT INTO runs VALUES (?, ?, ?, ?, ?, ?)", state.run_id, p["meeting_id"],
                            sha, state.status, state.model_dump_json(), iso(now))
         if state.status == "failed":
@@ -145,9 +149,8 @@ class Workflow:
         review = self.store.one("SELECT * FROM reviews WHERE review_id = ?", p["review_id"])
         if review is None:
             return {"outcome": "unknown_review", "detail": p["review_id"]}
-        if review["status"] == "escalated" and parse_time(review["deadline"]) <= now:
-            self._expire(review, now)  # the timer has not fired yet, but the window is closed
-            review["status"] = "expired"
+        if review["status"] in OPEN_REVIEW:
+            self._apply_deadlines(review, now)  # a passed deadline counts even if the timer has not fired yet
         if review["status"] == "expired":
             return {"outcome": "late_ignored", "review_id": review["review_id"], "detail": "review expired; action withheld"}
         if review["status"] not in OPEN_REVIEW:
@@ -211,16 +214,10 @@ class Workflow:
         escalated, expired = [], []
         for review in self.store.all("SELECT * FROM reviews WHERE status IN (?, ?) AND deadline <= ?",
                                      *OPEN_REVIEW, iso(now)):
-            if review["status"] == "pending":
-                deadline = parse_time(review["deadline"]) + ESCALATION_SLA
-                self._set_review(review["review_id"], "escalated", now, deadline=iso(deadline))
-                state = self._load_run(review["run_id"])
-                self.audit.log(state, "human_review", "escalated", candidate_id=review["candidate_id"],
-                               review_id=review["review_id"], escalated_to=review["escalation_to"], deadline=iso(deadline))
-                self._save_run(state, now)
+            changes = self._apply_deadlines(review, now)
+            if "escalated" in changes:
                 escalated.append(review["review_id"])
-            else:
-                self._expire(review, now)
+            if "expired" in changes:
                 expired.append(review["review_id"])
         to_execute += [a["idempotency_key"] for a in self.store.all(
             "SELECT idempotency_key FROM actions WHERE status IN (?, ?, ?)", *OPEN_ACTION)]
@@ -319,6 +316,28 @@ class Workflow:
             cand["due_date_text"] = edits["due_date"]
             cand["due_date"] = _parse_due_date(edits["due_date"], date.fromisoformat(meeting_date))
 
+    def _apply_deadlines(self, review: dict[str, Any], now: datetime) -> list[str]:
+        """Apply every review deadline that has passed by `now`, as the timer would have.
+
+        Shared by timer.tick and review.decision, so a decision is judged by the deadlines
+        even when no tick has run since they passed. Updates `review` in place.
+        """
+        changes = []
+        if review["status"] == "pending" and parse_time(review["deadline"]) <= now:
+            deadline = iso(parse_time(review["deadline"]) + ESCALATION_SLA)
+            self._set_review(review["review_id"], "escalated", now, deadline=deadline)
+            state = self._load_run(review["run_id"])
+            self.audit.log(state, "human_review", "escalated", candidate_id=review["candidate_id"],
+                           review_id=review["review_id"], escalated_to=review["escalation_to"], deadline=deadline)
+            self._save_run(state, now)
+            review["status"], review["deadline"] = "escalated", deadline
+            changes.append("escalated")
+        if review["status"] == "escalated" and parse_time(review["deadline"]) <= now:
+            self._expire(review, now)
+            review["status"] = "expired"
+            changes.append("expired")
+        return changes
+
     def _expire(self, review: dict[str, Any], now: datetime) -> None:
         self._set_review(review["review_id"], "expired", now)
         state = self._load_run(review["run_id"])
@@ -326,6 +345,8 @@ class Workflow:
         cand["review_status"] = "expired"
         self.audit.log(state, "human_review", "expired_withheld", candidate_id=review["candidate_id"],
                        review_id=review["review_id"], result="WITHHELD")
+        self.audit.log(state, "monitoring", "alert", candidate_id=review["candidate_id"],
+                       review_id=review["review_id"], reason="review expired with no decision; issue withheld")
         self._save_run(state, now)
         self._refresh_run_status(review["run_id"], now)
 

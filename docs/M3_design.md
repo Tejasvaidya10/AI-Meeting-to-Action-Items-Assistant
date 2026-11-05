@@ -56,11 +56,11 @@ Review (one per candidate):
 | From | Event / condition | To | Effect |
 |---|---|---|---|
 | — | `transcript.received` (new meeting_id + transcript hash) | pending | packet stored, 24 h deadline |
-| pending | `timer.tick` after deadline | escalated | project lead added, +48 h deadline |
+| pending | `timer.tick` after deadline, or a decision arriving after it | escalated | project lead added, +48 h deadline |
 | pending / escalated | `review.decision` approve, authorized reviewer, current version, fields resolved | approved | authorization + outbox row (`queued`) in one transaction |
 | pending / escalated | approve with unresolved owner/date | (unchanged) | `needs_changes`, guard blocked |
 | pending / escalated | `review.decision` reject | rejected | no action |
-| escalated | `timer.tick` after deadline, or a decision arriving after it | expired | action withheld |
+| escalated | `timer.tick` after deadline, or a decision arriving after it | expired | action withheld + `alert` |
 | any terminal | further decisions | (unchanged) | `already_decided` / `late_ignored` |
 
 Action (outbox, one per approved review):
@@ -81,7 +81,8 @@ Run: `awaiting_review` stays open until every review is terminal and every actio
 ## 4. Events and failure handling
 
 - **Duplicate events:** each `event_id` is inserted into `inbox` in the same transaction as its state change. A redelivery returns `duplicate_ignored`. A new `event_id` carrying an already-seen meeting (same meeting_id + transcript SHA-256) returns `duplicate_content`. A second approval click with a new id returns `already_decided`. `actions.review_id` is UNIQUE, so one review can never produce two actions.
-- **Late events:** a decision after the escalation deadline expires the review on the spot, even if the timer has not fired yet, and returns `late_ignored`.
+- **Late events:** a decision is judged by the review deadlines even if the timer has not fired yet. After 24 h the review is escalated first, so the project lead may decide. After 72 h it expires on the spot and the decision returns `late_ignored`.
+- **Failed extraction:** if the model call errors or times out, nothing is recorded, so a redelivery of the same event is processed again. If the reply is still schema-invalid after one retry, the run is saved as `failed` and an `alert` is logged. Only live runs count for `duplicate_content`, so the organizer can resend the same transcript to start a new run.
 - **Unexpected events:** an unknown type is recorded as `unsupported_type`. Missing fields return `malformed`. An unknown review returns `unknown_review`. None of these change state, and all are kept in `inbox` for inspection.
 - **Safe retries:** the idempotency key is `review_id:content_version`. It is stored on the Jira issue as a label (`idem-…`), because Jira has no idempotency header.
 - **Effect succeeded but confirmation lost:** the action is marked `uncertain`. Before any retry, the controller searches Jira for the label. If the issue is found, the action is marked done with that key; if not, it is resent. The same check runs for rows left in `sending` by a crash.
