@@ -10,6 +10,7 @@ Each page load calls resume(), as a restarted service would.
 from __future__ import annotations
 
 import html
+import json
 import os
 import shutil
 import uuid
@@ -99,6 +100,28 @@ h1, h2, h3 {font-family: Inter, -apple-system, sans-serif !important; font-weigh
 .meta dt {display:flex; align-items:center;}
 .stTabs [data-baseweb="tab"] [data-testid="stIconMaterial"] {color: #94A3B8;}
 .stTabs [aria-selected="true"] [data-testid="stIconMaterial"] {color: var(--primary);}
+
+/* white table card */
+.stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {background: var(--bg);}
+.table-card {background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; margin-top: 4px;
+             box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 26px rgba(15,23,42,.05);}
+.tc-head {display:flex; align-items:center; justify-content:space-between; padding: 14px 18px; border-bottom: 1px solid var(--line);
+          font-weight: 700; color: var(--ink);}
+.tc-head .count {font-size: .75rem; font-weight: 700; color: var(--primary); background: var(--primary-soft); border-radius: 999px; padding: 2px 10px;}
+table.issues {width: 100%; border-collapse: collapse; font-size: .9rem;}
+table.issues th {text-align: left; font-size: .68rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: var(--muted);
+                 background: var(--bg); padding: 10px 18px; border-bottom: 1px solid var(--line);}
+table.issues td {padding: 12px 18px; border-bottom: 1px solid var(--subtle); color: var(--ink); vertical-align: middle;}
+table.issues tr:last-child td {border-bottom: 0;}
+table.issues th, table.issues td {border-left: 0 !important; border-right: 0 !important; border-top: 0 !important;}
+table.issues tr:hover td {background: #FAFBFF;}
+table.issues .key {font-weight: 700; color: var(--primary);}
+table.issues code {background: var(--subtle); color: #475569; border-radius: 6px; padding: 2px 7px; font-size: .78rem;}
+[data-testid="stDataFrame"] {background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 2px;}
+.table-card {margin-bottom: 12px;}
+[data-testid="stSidebar"] [data-baseweb="select"] > div, [data-testid="stSidebar"] [data-baseweb="input"],
+[data-testid="stSidebar"] [data-baseweb="input"] input, [data-testid="stSidebar"] [data-testid="stNumberInputContainer"] button
+    {background: var(--subtle) !important;}
 
 /* segmented tabs */
 .stTabs [data-baseweb="tab-list"] {background: var(--subtle); border: 1px solid var(--line); border-radius: 14px; padding: 5px; gap: 4px;}
@@ -387,10 +410,15 @@ with tab_jira:
     if not issues:
         st.info("No issues yet. An issue is created only after a reviewer approves it.")
     else:
-        st.dataframe([{k: i[k] for k in ("key", "summary", "assignee", "due_date", "labels")} for i in issues],
-                     width="stretch", hide_index=True,
-                     column_config={"key": "Issue", "summary": "Summary", "assignee": "Assignee", "due_date": "Due",
-                                    "labels": st.column_config.TextColumn("Idempotency label", width="large")})
+        rows = "".join(
+            f'<tr><td><span class="key">{html.escape(i["key"])}</span></td><td>{html.escape(i["summary"])}</td>'
+            f'<td>{html.escape(i["assignee"] or "")}</td><td>{html.escape(i["due_date"] or "")}</td>'
+            f'<td><code>{html.escape(", ".join(json.loads(i["labels"]) if isinstance(i["labels"], str) else i["labels"]))}</code></td></tr>'
+            for i in issues)
+        st.markdown(f'<div class="table-card"><div class="tc-head"><span>{icon("ticket", 16)}Issues created</span>'
+                    f'<span class="count">{len(issues)}</span></div>'
+                    '<table class="issues"><thead><tr><th>Issue</th><th>Summary</th><th>Assignee</th><th>Due</th>'
+                    f'<th>Idempotency label</th></tr></thead><tbody>{rows}</tbody></table></div>', unsafe_allow_html=True)
     st.caption("Counted in the receiver's own database (data/ui/jira_sim.db), not in the workflow's status fields.")
 
 # ----------------------------------------------------------- runs and audit
