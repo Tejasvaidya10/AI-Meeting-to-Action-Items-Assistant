@@ -30,45 +30,100 @@ SAMPLE = ("Priya will update the API error messages by Friday. Someone should cl
           "Marco will review the release checklist on Monday.")
 PEOPLE = sorted(DIRECTORY)
 
-# Colours match the architecture diagram: people/approval amber, AI blue, code grey, Jira green.
+# Warm editorial palette (paper, ink, forest green, gold) shared with our LivinFloors and StagePulse work.
+LATTICE = ("url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='173.2' viewBox='0 0 100 173.2'"
+           "%3E%3Cpath d='M0 0L100 0M0 86.6L100 86.6M0 0L50 86.6M100 0L50 86.6M50 86.6L0 173.2M50 86.6L100 173.2' "
+           "fill='none' stroke='%23c9a86a' stroke-width='.7'/%3E%3C/svg%3E\") 0 0/110px auto")
 CSS = """
 <style>
-.block-container {padding-top: 3.6rem; max-width: 1250px;}
-.hero {background: linear-gradient(120deg, #F4F7FC 0%, #EEF3FB 100%); border: 1px solid #DCE6F5;
-       border-radius: 14px; padding: 18px 22px 16px; margin-bottom: 14px;}
-.hero h1 {font-size: 1.65rem; margin: 0 0 2px; color: #1F2D3D; padding: 0;}
-.hero p {margin: 0 0 12px; color: #5A6B80; font-size: 0.95rem;}
-.flow {display: flex; flex-wrap: wrap; gap: 6px; align-items: center;}
-.step {padding: 4px 11px; border-radius: 999px; font-size: 0.8rem; font-weight: 600; border: 1px solid;}
-.arrow {color: #9AA7B8; font-size: 0.85rem;}
-.s-event {background:#F7F7F7; border-color:#C9C9C9; color:#444;}
-.s-ai {background:#DCE8FA; border-color:#5B84C4; color:#24467A;}
-.s-code {background:#F7F7F7; border-color:#999; color:#333;}
-.s-human {background:#FFF0C2; border-color:#D9A400; color:#7A5B00;}
-.s-jira {background:#DCEFDC; border-color:#4C9A5B; color:#245C31;}
-.pill {display:inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700;
-       letter-spacing: .02em; margin-right: 6px; vertical-align: middle;}
-.p-pass {background:#E3F4E5; color:#1E6B2E;} .p-flag {background:#FDEBD3; color:#8A4B00;}
-.p-pending {background:#E7EEF9; color:#2F5590;} .p-escalated {background:#FDE2E1; color:#9B2C2C;}
-.card-title {font-size: 1.12rem; font-weight: 700; color:#1F2D3D; margin: 0 0 8px;}
-.grid {display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 10px 0;}
-.field {background:#F8FAFD; border:1px solid #E3E9F2; border-radius: 9px; padding: 7px 10px;}
-.field .k {font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color:#7A8799;}
-.field .v {font-size: 0.9rem; font-weight: 600; color:#1F2D3D; font-family: ui-monospace, Menlo, monospace;
-           overflow-wrap: anywhere;}
-.field .v.missing {color:#B54708;}
-.quote {border-left: 3px solid #5B84C4; background:#F4F7FC; padding: 8px 12px; border-radius: 0 8px 8px 0;
-        color:#2B3A4D; font-style: italic; margin-bottom: 10px;}
-.conflict {background:#FFF6E5; border:1px solid #F5D08A; color:#7A4E00; border-radius: 8px; padding: 7px 11px;
-           font-size: 0.88rem; margin-bottom: 10px;}
-.rules {font-size: 0.83rem; color:#4A5A6E; margin: 0; padding-left: 1.1rem;}
-.meta {font-size: 0.86rem; color:#4A5A6E; line-height: 1.7; margin-bottom: 4px;}
-.side-h {font-size: 0.74rem; text-transform: uppercase; letter-spacing: .08em; color:#7A8799; font-weight: 700;
-         margin: 16px 0 2px;}
-div[data-testid="stMetric"] {background:#FFFFFF; border:1px solid #E3E9F2; border-radius: 12px; padding: 10px 14px;
-                             box-shadow: 0 1px 2px rgba(31,45,61,.05);}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+:root {--ink:#242923; --muted:#6B6D60; --line:#D9D5C7; --paper:#FFFDF7; --cream:#F7F3E9; --sand:#EDE9DD;
+       --green:#304F3C; --green-soft:#E1E7D8; --gold:#9C7A3C; --gold-soft:#F4E7C8; --clay:#8A3B22; --clay-soft:#F4DED5;}
+html, body, [class*="css"], .stMarkdown, .stTextInput, .stSelectbox, button {font-family: Inter, -apple-system, sans-serif;}
+.block-container {padding-top: 3.4rem; max-width: 1240px;}
+h1, h2, h3, .serif {font-family: Georgia, "Times New Roman", serif !important; font-weight: 400 !important; letter-spacing: -.02em;}
+
+/* sidebar */
+[data-testid="stSidebar"] {background: var(--sand); border-right: 1px solid var(--line);}
+.brand {display:flex; align-items:center; gap:10px; margin: 2px 0 6px;}
+.brand-mark {display:flex; align-items:flex-end; gap:3px; height:24px;}
+.brand-mark i {display:block; width:4px; border-radius:3px; background: var(--green);}
+.brand-mark i:nth-child(1){height:12px} .brand-mark i:nth-child(2){height:24px} .brand-mark i:nth-child(3){height:18px; background:var(--gold)} .brand-mark i:nth-child(4){height:9px}
+.brand-name {font-family: Georgia, serif; font-size: 1.25rem; color: var(--ink); letter-spacing: -.02em;}
+.brand-sub {font: 600 9px ui-monospace, Menlo, monospace; letter-spacing: 1.6px; color: var(--muted); margin-bottom: 4px;}
+.side-h {font: 600 9.5px ui-monospace, Menlo, monospace; letter-spacing: 1.8px; color: var(--green); text-transform: uppercase;
+         margin: 18px 0 2px;}
+
+/* hero */
+.hero {position: relative; isolation: isolate; overflow: hidden; border-radius: 22px; padding: 26px 30px 22px; margin-bottom: 16px;
+       background: rgba(255,253,247,.72); border: 1px solid rgba(255,255,255,.8);
+       box-shadow: 0 1px 0 #ffffffcc inset, 0 18px 40px rgba(41,51,43,.07);}
+.hero:before {content:''; position:absolute; inset:0; z-index:-1; background: LATTICE; opacity:.45;
+              -webkit-mask-image: linear-gradient(90deg, #000, #0003 45%, #0000 70%); mask-image: linear-gradient(90deg, #000, #0003 45%, #0000 70%);}
+.eyebrow {font: 600 10px ui-monospace, Menlo, monospace; letter-spacing: 2px; color: var(--green); text-transform: uppercase;}
+.hero h1 {font-size: clamp(30px, 3.6vw, 46px); line-height: 1.08; margin: 10px 0 10px; padding: 0; color: var(--ink);}
+.hero h1 em {color: var(--green); font-style: italic;}
+.hero p {color: var(--muted); font-size: .97rem; margin: 0 0 16px; max-width: 760px;}
+.flow {display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+.step {padding: 5px 12px; border-radius: 999px; font-size: .78rem; font-weight: 600; border: 1px solid var(--line);
+       background: var(--paper); color: var(--ink);}
+.step.human {background: var(--gold-soft); border-color: #E2C98F; color: #6E5418;}
+.step.jira {background: var(--green-soft); border-color: #BCC9B1; color: var(--green);}
+.arrow {color: #A9A799; font-size: .8rem;}
+
+/* stat cards (MedSift-style) */
+.stats {display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 4px 0 14px;}
+.stat {display:flex; align-items:center; justify-content:space-between; background: var(--paper); border:1px solid var(--line);
+       border-radius: 16px; padding: 14px 16px; box-shadow: 0 6px 18px rgba(41,51,43,.04);}
+.stat .k {font-size: .74rem; color: var(--muted); font-weight: 500;}
+.stat .n {font-family: Georgia, serif; font-size: 1.9rem; line-height: 1.1; color: var(--ink);}
+.stat .n.warn {color: var(--clay);}
+.tile {width: 40px; height: 40px; border-radius: 12px; display:grid; place-items:center; font-size: 1.1rem;}
+.t-green {background: var(--green-soft);} .t-gold {background: var(--gold-soft);} .t-clay {background: var(--clay-soft);} .t-sand {background: var(--sand);}
+.notice {display:flex; gap:12px; align-items:center; border:1px solid #E7C9A0; background:#FBF1E1; color:#6E4A12;
+         border-radius: 14px; padding: 11px 15px; margin-bottom: 14px; font-size: .9rem;}
+
+/* segmented tabs (StagePulse-style) */
+.stTabs [data-baseweb="tab-list"] {background: var(--sand); border: 1px solid var(--line); border-radius: 16px; padding: 5px; gap: 4px;}
+.stTabs [data-baseweb="tab"] {border-radius: 12px; padding: 9px 16px; height: auto; color: var(--muted);}
+.stTabs [aria-selected="true"] {background: var(--paper); color: var(--ink); box-shadow: 0 2px 8px rgba(34,45,33,.08);}
+.stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"] {display: none;}
+
+/* review cards */
+[class*="st-key-card-"] {background: var(--paper); border-radius: 18px !important; border-color: var(--line) !important;
+                         box-shadow: 0 12px 30px rgba(41,51,43,.05); padding: 20px 22px 14px !important;}
+.card-title {font-family: Georgia, serif; font-size: 1.32rem; color: var(--ink); margin: 0 0 8px; letter-spacing: -.01em;}
+.pill {display:inline-block; padding: 3px 10px; border-radius: 999px; font: 700 10px ui-monospace, Menlo, monospace;
+       letter-spacing: 1px; margin-right: 6px; text-transform: uppercase;}
+.p-pass {background: var(--green-soft); color: var(--green);} .p-flag {background: var(--gold-soft); color: #6E5418;}
+.p-pending {background: var(--sand); color: var(--muted);} .p-escalated {background: var(--clay-soft); color: var(--clay);}
+.grid {display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin: 12px 0;}
+.field {background: var(--cream); border: 1px solid var(--line); border-radius: 11px; padding: 8px 11px;}
+.field .k {font: 600 9px ui-monospace, Menlo, monospace; letter-spacing: 1.4px; color: var(--muted); text-transform: uppercase;}
+.field .v {font-size: .93rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere;}
+.field .v.missing {color: var(--clay);}
+.quote {font-family: Georgia, serif; font-style: italic; font-size: 1.02rem; color: #34392F; border-left: 3px solid var(--green);
+        padding: 4px 0 4px 14px; margin: 4px 0 12px;}
+.conflict {background: var(--gold-soft); border: 1px solid #E2C98F; color: #6E5418; border-radius: 10px; padding: 8px 12px;
+           font-size: .86rem; margin-bottom: 10px;}
+.rules {font-size: .82rem; color: var(--muted); margin: 0; padding-left: 1.1rem;}
+.meta {font-size: .84rem; color: var(--muted); line-height: 1.75; background: var(--cream); border:1px solid var(--line);
+       border-radius: 12px; padding: 9px 12px; margin-bottom: 8px;}
+.meta b {color: var(--ink); font-weight: 600;}
+.meta code {background: transparent; color: var(--green); font-size: .8rem;}
+
+/* controls */
+.stButton > button, .stFormSubmitButton > button {border-radius: 11px; font-weight: 600; min-height: 42px;}
+.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primaryFormSubmit"] {background: var(--green); border-color: var(--green);}
+.stButton > button[kind="primary"]:hover, .stFormSubmitButton > button[kind="primaryFormSubmit"]:hover {background: #203C2A; border-color: #203C2A;}
+.stButton > button[kind="secondary"], .stFormSubmitButton > button[kind="secondaryFormSubmit"] {background: var(--paper); border-color: var(--line);}
+[data-baseweb="input"], [data-baseweb="select"] > div, [data-baseweb="textarea"] {border-radius: 10px !important;}
+[data-testid="stForm"] {border-radius: 18px; border-color: var(--line); background: var(--paper);}
+[data-testid="stAlert"] {border-radius: 14px;}
+[data-testid="stExpander"] details {border-radius: 14px; background: var(--paper); border-color: var(--line);}
+:focus-visible {outline: 2px solid var(--gold) !important; outline-offset: 3px;}
 </style>
-"""
+""".replace("LATTICE", LATTICE)
 
 st.set_page_config(page_title="Meeting-to-Action-Items Assistant", page_icon="✅", layout="wide")
 st.markdown(CSS, unsafe_allow_html=True)
@@ -117,9 +172,14 @@ def pill(text: str) -> str:
 
 
 def field(label: str, value: str | None) -> str:
-    shown = html.escape(value) if value else "UNRESOLVED"
+    shown = html.escape(value) if value else "Unresolved"
     return (f'<div class="field"><div class="k">{label}</div>'
             f'<div class="v{"" if value else " missing"}">{shown}</div></div>')
+
+
+def stat(label: str, value: int, icon: str, tile: str, warn: bool = False) -> str:
+    return (f'<div class="stat"><div><div class="k">{label}</div><div class="n{" warn" if warn else ""}">{value}</div></div>'
+            f'<div class="tile t-{tile}">{icon}</div></div>')
 
 
 def side_heading(text: str) -> None:
@@ -133,7 +193,9 @@ if recovered:
 
 # ------------------------------------------------------------------ sidebar
 with st.sidebar:
-    st.markdown("### ✅ Reviewer console")
+    st.markdown('<div class="brand"><div class="brand-mark"><i></i><i></i><i></i><i></i></div>'
+                '<div class="brand-name">Action Items</div></div>'
+                '<div class="brand-sub">TEAM 8 · REVIEWER CONSOLE</div>', unsafe_allow_html=True)
     side_heading("Reviewer")
     reviewer = st.selectbox("Signed in as", PEOPLE, index=PEOPLE.index("shubhada"), key="reviewer",
                             help=f"The organizer reviews first; {PROJECT_LEAD} (project lead) may decide after escalation.")
@@ -152,15 +214,15 @@ with st.sidebar:
     st.caption(f"Simulated time **+{ss['clock_offset_h']} h** · {now:%a %d %b, %H:%M} UTC")
     hours = st.number_input("Advance by hours", min_value=1, max_value=200, value=25, step=1)
     c1, c2 = st.columns(2)
-    if c1.button("Advance", icon="⏩", width="stretch"):
+    if c1.button("Advance", icon=":material/fast_forward:", width="stretch"):
         ss["clock_offset_h"] += int(hours)
         st.rerun()
-    if c2.button("Timer tick", key="tick", icon="⏱️", width="stretch"):
+    if c2.button("Timer tick", key="tick", icon=":material/timer:", width="stretch"):
         send({"event_id": f"tick-{uuid.uuid4().hex[:10]}", "type": "timer.tick", "payload": {}})
         st.rerun()
 
     st.divider()
-    if st.button("Reset demo data", icon="🗑️", type="secondary", width="stretch"):
+    if st.button("Reset demo data", icon=":material/restart_alt:", type="secondary", width="stretch"):
         shutil.rmtree(DATA_DIR, ignore_errors=True)
         for key in ("clock_offset_h", "messages", "last_transcript_event"):
             ss.pop(key, None)
@@ -169,15 +231,17 @@ with st.sidebar:
 # ------------------------------------------------------------------ header
 st.markdown("""
 <div class="hero">
-  <h1>Meeting-to-Action-Items Assistant</h1>
-  <p>Every Jira issue waits for a named reviewer. State is saved in SQLite, so pending reviews survive a restart.</p>
+  <div class="eyebrow">Milestone 3 · human-in-the-loop</div>
+  <h1>Meeting notes to <em>action items</em>,<br>approved by a person.</h1>
+  <p>Every Jira issue waits for a named reviewer. Decisions, retries and restarts are saved in SQLite,
+     so nothing is lost and nothing is sent twice.</p>
   <div class="flow">
-    <span class="step s-event">Event</span><span class="arrow">→</span>
-    <span class="step s-ai">Extract (LLM)</span><span class="arrow">→</span>
-    <span class="step s-code">Validate</span><span class="arrow">→</span>
-    <span class="step s-human">Human review</span><span class="arrow">→</span>
-    <span class="step s-human">Approval Guard</span><span class="arrow">→</span>
-    <span class="step s-jira">Jira (simulated)</span>
+    <span class="step">Event</span><span class="arrow">→</span>
+    <span class="step">Extract (LLM)</span><span class="arrow">→</span>
+    <span class="step">Validate</span><span class="arrow">→</span>
+    <span class="step human">Human review</span><span class="arrow">→</span>
+    <span class="step human">Approval Guard</span><span class="arrow">→</span>
+    <span class="step jira">Jira (simulated)</span>
   </div>
 </div>""", unsafe_allow_html=True)
 
@@ -186,14 +250,19 @@ if ss["messages"]:
 
 wf = workflow()
 open_reviews = wf.open_reviews()
-m1, m2, m3, m4 = st.columns(4)
-m1.metric("Open reviews", len(open_reviews))
-m2.metric("Escalated", sum(r["status"] == "escalated" for r in open_reviews))
-m3.metric("Issues in Jira", wf.jira.count())
-m4.metric("Runs", wf.store.one("SELECT COUNT(*) AS n FROM runs")["n"])
+escalated = [r for r in open_reviews if r["status"] == "escalated"]
+st.markdown('<div class="stats">'
+            + stat("Open reviews", len(open_reviews), "🗂️", "sand")
+            + stat("Escalated", len(escalated), "⏰", "clay" if escalated else "sand", warn=bool(escalated))
+            + stat("Issues in Jira", wf.jira.count(), "🎫", "green")
+            + stat("Runs", wf.store.one("SELECT COUNT(*) AS n FROM runs")["n"], "📜", "gold")
+            + "</div>", unsafe_allow_html=True)
+if escalated:
+    st.markdown(f'<div class="notice">⏰ <span><b>{len(escalated)} review(s) escalated to {html.escape(PROJECT_LEAD)}.</b> '
+                "They expire 48 h after escalation, and the issue is then withheld.</span></div>", unsafe_allow_html=True)
 
-tab_new, tab_queue, tab_jira, tab_runs = st.tabs(["📝 New meeting", f"🧑‍⚖️ Review queue ({len(open_reviews)})",
-                                                  f"🎫 Simulated Jira ({wf.jira.count()})", "📜 Runs and audit"])
+tab_new, tab_queue, tab_jira, tab_runs = st.tabs(["📝  New meeting", f"🧑‍⚖️  Review queue ({len(open_reviews)})",
+                                                  f"🎫  Simulated Jira ({wf.jira.count()})", "📜  Runs and audit"])
 
 # ------------------------------------------------------------- new meeting
 with tab_new:
@@ -203,7 +272,7 @@ with tab_new:
         meeting_date = c2.date_input("Meeting date", value=date(2026, 10, 8))
         organizer = c3.selectbox("Organizer (reviewer)", PEOPLE, index=PEOPLE.index("shubhada"))
         transcript = st.text_area("Transcript", value=SAMPLE, height=130)
-        submitted = st.form_submit_button("Send transcript event", type="primary", icon="📨")
+        submitted = st.form_submit_button("Send transcript event", type="primary", icon=":material/send:")
     if submitted:
         event = {"event_id": f"evt-{uuid.uuid4().hex[:10]}", "type": "transcript.received",
                  "payload": {"meeting_id": meeting_id, "meeting_date": meeting_date.isoformat(),
@@ -215,7 +284,7 @@ with tab_new:
         c1, c2 = st.columns([3, 2], vertical_alignment="center")
         c1.caption(f"Last event sent: `{ss['last_transcript_event']['event_id']}`. "
                    "A webhook may deliver it twice; the inbox ignores the repeat.")
-        if c2.button("Deliver the same event again (webhook retry)", key="redeliver", icon="🔁", width="stretch"):
+        if c2.button("Deliver the same event again (webhook retry)", key="redeliver", icon=":material/replay:", width="stretch"):
             send(ss["last_transcript_event"])
             st.rerun()
 
@@ -226,24 +295,24 @@ with tab_queue:
     for review in open_reviews:
         p = review["packet_json"]
         fields = p["proposed_action"]["fields"]
-        with st.container(border=True):
+        with st.container(border=True, key=f"card-{review['review_id']}"):
             left, right = st.columns([3, 2], gap="large")
             with left:
                 st.markdown(
-                    f'<div class="card-title">{html.escape(fields["summary"])}</div>'
-                    + pill(p["validation"]) + pill(review["status"])
+                    pill(p["validation"]) + pill(review["status"])
+                    + f'<div class="card-title" style="margin-top:8px">{html.escape(fields["summary"])}</div>'
+                    + f'<div class="quote">“{html.escape(p["evidence"]["quote"])}”</div>'
                     + '<div class="grid">' + field("Action", p["proposed_action"]["action"])
                     + field("Assignee", fields["assignee"]) + field("Due date", fields["due_date"]) + "</div>"
-                    + f'<div class="quote">“{html.escape(p["evidence"]["quote"])}”</div>'
                     + ('<div class="conflict">⚠️ ' + html.escape("; ".join(p["conflicts"])) + "</div>" if p["conflicts"] else "")
                     + '<ul class="rules">' + "".join(f"<li>{html.escape(r)}</li>" for r in p["rules"]) + "</ul>",
                     unsafe_allow_html=True)
             with right:
                 st.markdown(
-                    f'<div class="meta">👤 <b>Assigned to</b> {html.escape(review["assigned_to"])} · '
-                    f'escalates to {html.escape(review["escalation_to"])}<br>'
-                    f'⏰ <b>Deadline</b> {html.escape(review["deadline"])}<br>'
-                    f'🔒 <b>Content version</b> <code>{html.escape(p["content_version"])}</code></div>',
+                    f'<div class="meta">👤 <b>{html.escape(review["assigned_to"])}</b> reviews · escalates to '
+                    f'<b>{html.escape(review["escalation_to"])}</b><br>'
+                    f'⏰ Deadline <b>{html.escape(review["deadline"].replace("T", " ").replace("Z", " UTC"))}</b><br>'
+                    f'🔒 Version <code>{html.escape(p["content_version"])}</code></div>',
                     unsafe_allow_html=True)
                 with st.form(f"decide-{review['review_id']}", border=False):
                     c1, c2 = st.columns(2)
@@ -251,8 +320,8 @@ with tab_queue:
                     due = c2.text_input("Due date", value=fields["due_date"] or "", placeholder="Friday or 2026-10-16")
                     comment = st.text_input("Comment (optional)")
                     b1, b2 = st.columns(2)
-                    approve = b1.form_submit_button("Approve", type="primary", icon="✔️", width="stretch")
-                    reject = b2.form_submit_button("Reject", icon="✖️", width="stretch")
+                    approve = b1.form_submit_button("Approve", type="primary", icon=":material/check:", width="stretch")
+                    reject = b2.form_submit_button("Reject", icon=":material/close:", width="stretch")
                 if approve or reject:
                     edits = {k: v.strip() for k, v, old in (("owner", owner, fields["assignee"]), ("due_date", due, fields["due_date"]))
                              if v.strip() and v.strip() != (old or "")}
