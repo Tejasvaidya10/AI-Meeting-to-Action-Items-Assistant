@@ -101,7 +101,7 @@ Saved outputs quoted in the Milestone 3 report:
 | File | Contents |
 |---|---|
 | `evidence/pytest.txt` | All 40 tests, verbose |
-| `evidence/ui/` | Screenshots of the reviewer app after a transcript and one approval |
+| `evidence/ui/` | Screenshots of the reviewer app: new meeting, review queue, Jira after one approval, audit, and an escalated review |
 | `evidence/m3_scenarios.txt` | The four required cases, with run IDs and Jira issue counts |
 | `evidence/cli_drill.txt` | CLI walk-through as separate processes, with database reads between steps (3 approvals → 3 issues) |
 | `evidence/eval_mock.txt` | Labeled-set evaluation of the rule-based baseline |

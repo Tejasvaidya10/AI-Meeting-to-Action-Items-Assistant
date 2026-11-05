@@ -30,100 +30,103 @@ SAMPLE = ("Priya will update the API error messages by Friday. Someone should cl
           "Marco will review the release checklist on Monday.")
 PEOPLE = sorted(DIRECTORY)
 
-# Warm editorial palette (paper, ink, forest green, gold) shared with our LivinFloors and StagePulse work.
-LATTICE = ("url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='173.2' viewBox='0 0 100 173.2'"
-           "%3E%3Cpath d='M0 0L100 0M0 86.6L100 86.6M0 0L50 86.6M100 0L50 86.6M50 86.6L0 173.2M50 86.6L100 173.2' "
-           "fill='none' stroke='%23c9a86a' stroke-width='.7'/%3E%3C/svg%3E\") 0 0/110px auto")
+# Slate + indigo palette (Tailwind slate/indigo/emerald/amber/red scales).
+DOTS = ("url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18'%3E"
+        "%3Ccircle cx='1.5' cy='1.5' r='1.2' fill='%236366F1'/%3E%3C/svg%3E\") 0 0/18px 18px")
 CSS = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-:root {--ink:#242923; --muted:#6B6D60; --line:#D9D5C7; --paper:#FFFDF7; --cream:#F7F3E9; --sand:#EDE9DD;
-       --green:#304F3C; --green-soft:#E1E7D8; --gold:#9C7A3C; --gold-soft:#F4E7C8; --clay:#8A3B22; --clay-soft:#F4DED5;}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root {--ink:#0F172A; --muted:#64748B; --line:#E2E8F0; --card:#FFFFFF; --bg:#F8FAFC; --subtle:#F1F5F9;
+       --primary:#4F46E5; --primary-dark:#4338CA; --primary-soft:#EEF2FF; --primary-line:#C7D2FE;
+       --success:#047857; --success-soft:#D1FAE5; --warn:#92400E; --warn-soft:#FEF3C7; --warn-line:#FCD34D;
+       --danger:#B91C1C; --danger-soft:#FEE2E2;}
 html, body, [class*="css"], .stMarkdown, .stTextInput, .stSelectbox, button {font-family: Inter, -apple-system, sans-serif;}
 .block-container {padding-top: 3.4rem; max-width: 1240px;}
-h1, h2, h3, .serif {font-family: Georgia, "Times New Roman", serif !important; font-weight: 400 !important; letter-spacing: -.02em;}
+h1, h2, h3 {font-family: Inter, -apple-system, sans-serif !important; font-weight: 700 !important; letter-spacing: -.025em;}
 
 /* sidebar */
-[data-testid="stSidebar"] {background: var(--sand); border-right: 1px solid var(--line);}
+[data-testid="stSidebar"] {background: var(--card); border-right: 1px solid var(--line);}
 .brand {display:flex; align-items:center; gap:10px; margin: 2px 0 6px;}
 .brand-mark {display:flex; align-items:flex-end; gap:3px; height:24px;}
-.brand-mark i {display:block; width:4px; border-radius:3px; background: var(--green);}
-.brand-mark i:nth-child(1){height:12px} .brand-mark i:nth-child(2){height:24px} .brand-mark i:nth-child(3){height:18px; background:var(--gold)} .brand-mark i:nth-child(4){height:9px}
-.brand-name {font-family: Georgia, serif; font-size: 1.25rem; color: var(--ink); letter-spacing: -.02em;}
+.brand-mark i {display:block; width:4px; border-radius:3px; background: var(--primary);}
+.brand-mark i:nth-child(1){height:12px; opacity:.55} .brand-mark i:nth-child(2){height:24px} .brand-mark i:nth-child(3){height:18px; opacity:.8} .brand-mark i:nth-child(4){height:9px; opacity:.4}
+.brand-name {font-size: 1.15rem; font-weight: 800; color: var(--ink); letter-spacing: -.03em;}
 .brand-sub {font: 600 9px ui-monospace, Menlo, monospace; letter-spacing: 1.6px; color: var(--muted); margin-bottom: 4px;}
-.side-h {font: 600 9.5px ui-monospace, Menlo, monospace; letter-spacing: 1.8px; color: var(--green); text-transform: uppercase;
-         margin: 18px 0 2px;}
+.side-h {font-size: .68rem; font-weight: 700; letter-spacing: .09em; color: var(--muted); text-transform: uppercase; margin: 18px 0 2px;}
 
 /* hero */
-.hero {position: relative; isolation: isolate; overflow: hidden; border-radius: 22px; padding: 26px 30px 22px; margin-bottom: 16px;
-       background: rgba(255,253,247,.72); border: 1px solid rgba(255,255,255,.8);
-       box-shadow: 0 1px 0 #ffffffcc inset, 0 18px 40px rgba(41,51,43,.07);}
-.hero:before {content:''; position:absolute; inset:0; z-index:-1; background: LATTICE; opacity:.45;
-              -webkit-mask-image: linear-gradient(90deg, #000, #0003 45%, #0000 70%); mask-image: linear-gradient(90deg, #000, #0003 45%, #0000 70%);}
-.eyebrow {font: 600 10px ui-monospace, Menlo, monospace; letter-spacing: 2px; color: var(--green); text-transform: uppercase;}
-.hero h1 {font-size: clamp(30px, 3.6vw, 46px); line-height: 1.08; margin: 10px 0 10px; padding: 0; color: var(--ink);}
-.hero h1 em {color: var(--green); font-style: italic;}
+.hero {position: relative; isolation: isolate; overflow: hidden; border-radius: 20px; padding: 26px 30px 22px; margin-bottom: 16px;
+       background: radial-gradient(circle at 92% 0%, #E0E7FF 0, rgba(224,231,255,0) 45%), var(--card);
+       border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 12px 32px rgba(15,23,42,.06);}
+.hero:before {content:''; position:absolute; inset:0; z-index:-1; background: DOTS; opacity:.18;
+              -webkit-mask-image: linear-gradient(270deg, #000, #0000 55%); mask-image: linear-gradient(270deg, #000, #0000 55%);}
+.eyebrow {display:inline-block; font-size: .7rem; font-weight: 700; letter-spacing: .08em; color: var(--primary); text-transform: uppercase;
+          background: var(--primary-soft); border: 1px solid var(--primary-line); border-radius: 999px; padding: 3px 10px;}
+.hero h1 {font-size: clamp(28px, 3.4vw, 42px); line-height: 1.1; margin: 12px 0 10px; padding: 0; color: var(--ink); font-weight: 800 !important;}
+.hero h1 em {font-style: normal; background: linear-gradient(90deg, #4F46E5, #7C3AED); -webkit-background-clip: text; background-clip: text; color: transparent;}
 .hero p {color: var(--muted); font-size: .97rem; margin: 0 0 16px; max-width: 760px;}
 .flow {display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
 .step {padding: 5px 12px; border-radius: 999px; font-size: .78rem; font-weight: 600; border: 1px solid var(--line);
-       background: var(--paper); color: var(--ink);}
-.step.human {background: var(--gold-soft); border-color: #E2C98F; color: #6E5418;}
-.step.jira {background: var(--green-soft); border-color: #BCC9B1; color: var(--green);}
-.arrow {color: #A9A799; font-size: .8rem;}
+       background: var(--card); color: #334155;}
+.step.human {background: var(--primary-soft); border-color: var(--primary-line); color: var(--primary-dark);}
+.step.jira {background: var(--success-soft); border-color: #A7F3D0; color: var(--success);}
+.arrow {color: #94A3B8; font-size: .8rem;}
 
-/* stat cards (MedSift-style) */
+/* stat cards */
 .stats {display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 4px 0 14px;}
-.stat {display:flex; align-items:center; justify-content:space-between; background: var(--paper); border:1px solid var(--line);
-       border-radius: 16px; padding: 14px 16px; box-shadow: 0 6px 18px rgba(41,51,43,.04);}
-.stat .k {font-size: .74rem; color: var(--muted); font-weight: 500;}
-.stat .n {font-family: Georgia, serif; font-size: 1.9rem; line-height: 1.1; color: var(--ink);}
-.stat .n.warn {color: var(--clay);}
+.stat {display:flex; align-items:center; justify-content:space-between; background: var(--card); border:1px solid var(--line);
+       border-radius: 16px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04);}
+.stat .k {font-size: .75rem; color: var(--muted); font-weight: 500;}
+.stat .n {font-size: 1.85rem; font-weight: 800; line-height: 1.15; color: var(--ink); letter-spacing: -.03em;}
+.stat .n.warn {color: var(--danger);}
 .tile {width: 40px; height: 40px; border-radius: 12px; display:grid; place-items:center; font-size: 1.1rem;}
-.t-green {background: var(--green-soft);} .t-gold {background: var(--gold-soft);} .t-clay {background: var(--clay-soft);} .t-sand {background: var(--sand);}
-.notice {display:flex; gap:12px; align-items:center; border:1px solid #E7C9A0; background:#FBF1E1; color:#6E4A12;
+.t-success {background: var(--success-soft);} .t-primary {background: var(--primary-soft);} .t-danger {background: var(--danger-soft);} .t-neutral {background: var(--subtle);}
+.notice {display:flex; gap:12px; align-items:center; border:1px solid var(--warn-line); background: #FFFBEB; color: var(--warn);
          border-radius: 14px; padding: 11px 15px; margin-bottom: 14px; font-size: .9rem;}
 
-/* segmented tabs (StagePulse-style) */
-.stTabs [data-baseweb="tab-list"] {background: var(--sand); border: 1px solid var(--line); border-radius: 16px; padding: 5px; gap: 4px;}
-.stTabs [data-baseweb="tab"] {border-radius: 12px; padding: 9px 16px; height: auto; color: var(--muted);}
-.stTabs [aria-selected="true"] {background: var(--paper); color: var(--ink); box-shadow: 0 2px 8px rgba(34,45,33,.08);}
+/* segmented tabs */
+.stTabs [data-baseweb="tab-list"] {background: var(--subtle); border: 1px solid var(--line); border-radius: 14px; padding: 5px; gap: 4px;}
+.stTabs [data-baseweb="tab"] {border-radius: 10px; padding: 9px 16px; height: auto; color: var(--muted); font-weight: 500;}
+.stTabs [aria-selected="true"] {background: var(--card); color: var(--primary); box-shadow: 0 1px 3px rgba(15,23,42,.1);}
 .stTabs [data-baseweb="tab-highlight"], .stTabs [data-baseweb="tab-border"] {display: none;}
 
 /* review cards */
-[class*="st-key-card-"] {background: var(--paper); border-radius: 18px !important; border-color: var(--line) !important;
-                         box-shadow: 0 12px 30px rgba(41,51,43,.05); padding: 20px 22px 14px !important;}
-.card-title {font-family: Georgia, serif; font-size: 1.32rem; color: var(--ink); margin: 0 0 8px; letter-spacing: -.01em;}
-.pill {display:inline-block; padding: 3px 10px; border-radius: 999px; font: 700 10px ui-monospace, Menlo, monospace;
-       letter-spacing: 1px; margin-right: 6px; text-transform: uppercase;}
-.p-pass {background: var(--green-soft); color: var(--green);} .p-flag {background: var(--gold-soft); color: #6E5418;}
-.p-pending {background: var(--sand); color: var(--muted);} .p-escalated {background: var(--clay-soft); color: var(--clay);}
+[class*="st-key-card-"] {background: var(--card); border-radius: 18px !important; border-color: var(--line) !important;
+                         box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 26px rgba(15,23,42,.05); padding: 20px 22px 14px !important;}
+.card-title {font-size: 1.22rem; font-weight: 700; color: var(--ink); margin: 0 0 8px; letter-spacing: -.02em;}
+.pill {display:inline-block; padding: 3px 10px; border-radius: 999px; font-size: .68rem; font-weight: 700;
+       letter-spacing: .06em; margin-right: 6px; text-transform: uppercase;}
+.p-pass {background: var(--success-soft); color: var(--success);} .p-flag {background: var(--warn-soft); color: var(--warn);}
+.p-pending {background: var(--subtle); color: #475569;} .p-escalated {background: var(--danger-soft); color: var(--danger);}
 .grid {display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin: 12px 0;}
-.field {background: var(--cream); border: 1px solid var(--line); border-radius: 11px; padding: 8px 11px;}
-.field .k {font: 600 9px ui-monospace, Menlo, monospace; letter-spacing: 1.4px; color: var(--muted); text-transform: uppercase;}
+.field {background: var(--bg); border: 1px solid var(--line); border-radius: 11px; padding: 8px 11px;}
+.field .k {font-size: .66rem; font-weight: 700; letter-spacing: .07em; color: var(--muted); text-transform: uppercase;}
 .field .v {font-size: .93rem; font-weight: 600; color: var(--ink); overflow-wrap: anywhere;}
-.field .v.missing {color: var(--clay);}
-.quote {font-family: Georgia, serif; font-style: italic; font-size: 1.02rem; color: #34392F; border-left: 3px solid var(--green);
-        padding: 4px 0 4px 14px; margin: 4px 0 12px;}
-.conflict {background: var(--gold-soft); border: 1px solid #E2C98F; color: #6E5418; border-radius: 10px; padding: 8px 12px;
+.field .v.missing {color: var(--danger);}
+.quote {font-style: italic; font-size: 1rem; color: #334155; border-left: 3px solid var(--primary);
+        background: linear-gradient(90deg, var(--primary-soft), rgba(238,242,255,0) 70%); padding: 8px 12px; border-radius: 0 10px 10px 0; margin: 4px 0 12px;}
+.conflict {background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn); border-radius: 10px; padding: 8px 12px;
            font-size: .86rem; margin-bottom: 10px;}
 .rules {font-size: .82rem; color: var(--muted); margin: 0; padding-left: 1.1rem;}
-.meta {font-size: .84rem; color: var(--muted); line-height: 1.75; background: var(--cream); border:1px solid var(--line);
+.meta {font-size: .84rem; color: var(--muted); line-height: 1.75; background: var(--bg); border:1px solid var(--line);
        border-radius: 12px; padding: 9px 12px; margin-bottom: 8px;}
 .meta b {color: var(--ink); font-weight: 600;}
-.meta code {background: transparent; color: var(--green); font-size: .8rem;}
+.meta code {background: transparent; color: var(--primary); font-size: .8rem;}
 
 /* controls */
-.stButton > button, .stFormSubmitButton > button {border-radius: 11px; font-weight: 600; min-height: 42px;}
-.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primaryFormSubmit"] {background: var(--green); border-color: var(--green);}
-.stButton > button[kind="primary"]:hover, .stFormSubmitButton > button[kind="primaryFormSubmit"]:hover {background: #203C2A; border-color: #203C2A;}
-.stButton > button[kind="secondary"], .stFormSubmitButton > button[kind="secondaryFormSubmit"] {background: var(--paper); border-color: var(--line);}
+.stButton > button, .stFormSubmitButton > button {border-radius: 10px; font-weight: 600; min-height: 42px;}
+.stButton > button[kind="primary"], .stFormSubmitButton > button[kind="primaryFormSubmit"] {background: var(--primary); border-color: var(--primary);
+    box-shadow: 0 1px 2px rgba(79,70,229,.25);}
+.stButton > button[kind="primary"]:hover, .stFormSubmitButton > button[kind="primaryFormSubmit"]:hover {background: var(--primary-dark); border-color: var(--primary-dark);}
+.stButton > button[kind="secondary"], .stFormSubmitButton > button[kind="secondaryFormSubmit"] {background: var(--card); border-color: var(--line); color: #334155;}
+.stButton > button[kind="secondary"]:hover, .stFormSubmitButton > button[kind="secondaryFormSubmit"]:hover {border-color: var(--primary-line); color: var(--primary);}
 [data-baseweb="input"], [data-baseweb="select"] > div, [data-baseweb="textarea"] {border-radius: 10px !important;}
-[data-testid="stForm"] {border-radius: 18px; border-color: var(--line); background: var(--paper);}
+[data-testid="stForm"] {border-radius: 18px; border-color: var(--line); background: var(--card);}
 [data-testid="stAlert"] {border-radius: 14px;}
-[data-testid="stExpander"] details {border-radius: 14px; background: var(--paper); border-color: var(--line);}
-:focus-visible {outline: 2px solid var(--gold) !important; outline-offset: 3px;}
+[data-testid="stExpander"] details {border-radius: 14px; background: var(--card); border-color: var(--line);}
+:focus-visible {outline: 2px solid var(--primary) !important; outline-offset: 3px;}
 </style>
-""".replace("LATTICE", LATTICE)
+""".replace("DOTS", DOTS)
 
 st.set_page_config(page_title="Meeting-to-Action-Items Assistant", page_icon="✅", layout="wide")
 st.markdown(CSS, unsafe_allow_html=True)
@@ -252,10 +255,10 @@ wf = workflow()
 open_reviews = wf.open_reviews()
 escalated = [r for r in open_reviews if r["status"] == "escalated"]
 st.markdown('<div class="stats">'
-            + stat("Open reviews", len(open_reviews), "🗂️", "sand")
-            + stat("Escalated", len(escalated), "⏰", "clay" if escalated else "sand", warn=bool(escalated))
-            + stat("Issues in Jira", wf.jira.count(), "🎫", "green")
-            + stat("Runs", wf.store.one("SELECT COUNT(*) AS n FROM runs")["n"], "📜", "gold")
+            + stat("Open reviews", len(open_reviews), "🗂️", "neutral")
+            + stat("Escalated", len(escalated), "⏰", "danger" if escalated else "neutral", warn=bool(escalated))
+            + stat("Issues in Jira", wf.jira.count(), "🎫", "success")
+            + stat("Runs", wf.store.one("SELECT COUNT(*) AS n FROM runs")["n"], "📜", "primary")
             + "</div>", unsafe_allow_html=True)
 if escalated:
     st.markdown(f'<div class="notice">⏰ <span><b>{len(escalated)} review(s) escalated to {html.escape(PROJECT_LEAD)}.</b> '
