@@ -82,6 +82,13 @@ h1, h2, h3 {font-family: Inter, -apple-system, sans-serif !important; font-weigh
 .ov-n {font-size: 1.9rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; color: var(--ink);}
 .ov-n.warn {color: var(--danger);}
 .ov-k {font-size: .76rem; color: var(--muted); margin-top: 2px;}
+.ov-cell {display:flex; align-items:center; justify-content:space-between; gap: 10px; padding-right: 14px;}
+.ov-tile {width: 44px; height: 44px; border-radius: 12px; display:grid; place-items:center; flex-shrink: 0;}
+.ov-tile .ic {margin: 0; color: currentColor;}
+.c-primary {background: var(--primary-soft); color: var(--primary);}
+.c-danger {background: var(--danger-soft); color: #DC2626;}
+.c-success {background: var(--success-soft); color: #059669;}
+.c-violet {background: #F3E8FF; color: #7C3AED;}
 .bar {display:flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--subtle); gap: 2px;}
 .seg {display:block; min-width: 6px; background: var(--subtle);}
 .legend {display:flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: .78rem; color: var(--muted);}
@@ -247,11 +254,14 @@ def overview(counts: dict[str, int], jira: int, runs: int) -> str:
     bar = "".join(f'<span class="seg s-{k}" style="flex:{counts.get(k, 0)}"></span>' for k, _ in order if counts.get(k))
     legend = "".join(f'<span class="lg"><i class="dot s-{k}"></i>{label} <b>{counts.get(k, 0)}</b></span>' for k, label in order)
     open_n = counts.get("pending", 0) + counts.get("escalated", 0)
+    def cell(value: int, label: str, icon_name: str, tone: str, warn: bool = False) -> str:
+        return (f'<div class="ov-cell"><div><div class="ov-n{" warn" if warn else ""}">{value}</div>'
+                f'<div class="ov-k">{label}</div></div><div class="ov-tile c-{tone}">{icon(icon_name, 20)}</div></div>')
     return (f'<div class="overview"><div class="ov-top">'
-            f'<div><div class="ov-n">{open_n}</div><div class="ov-k">{icon("inbox")}open reviews</div></div>'
-            f'<div><div class="ov-n{" warn" if counts.get("escalated") else ""}">{counts.get("escalated", 0)}</div><div class="ov-k">{icon("clock")}escalated</div></div>'
-            f'<div><div class="ov-n">{jira}</div><div class="ov-k">{icon("ticket")}issues in Jira</div></div>'
-            f'<div><div class="ov-n">{runs}</div><div class="ov-k">{icon("history")}runs</div></div></div>'
+            + cell(open_n, "open reviews", "inbox", "primary")
+            + cell(counts.get("escalated", 0), "escalated", "clock", "danger", warn=bool(counts.get("escalated")))
+            + cell(jira, "issues in Jira", "ticket", "success")
+            + cell(runs, "runs", "history", "violet") + "</div>"
             f'<div class="bar">{bar or "<span class=seg style=flex:1></span>"}</div>'
             f'<div class="legend">{legend}<span class="lg muted">{total} reviews in total</span></div></div>')
 

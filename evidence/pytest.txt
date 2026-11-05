@@ -46,4 +46,4 @@ test_run_state.py::test_failed_log_write_is_recorded_and_does_not_stop_run PASSE
 test_run_state.py::test_guard_blocks_approved_item_with_unresolved_fields PASSED [ 97%]
 test_run_state.py::test_resubmitting_never_creates_a_second_issue PASSED [100%]
 
-============================== 40 passed in 1.49s ==============================
+============================== 40 passed in 1.87s ==============================
