@@ -72,17 +72,26 @@ h1, h2, h3 {font-family: Inter, -apple-system, sans-serif !important; font-weigh
 .step.jira {background: var(--success-soft); border-color: #A7F3D0; color: var(--success);}
 .arrow {color: #94A3B8; font-size: .8rem;}
 
-/* stat cards */
-.stats {display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin: 4px 0 14px;}
-.stat {display:flex; align-items:center; justify-content:space-between; background: var(--card); border:1px solid var(--line);
-       border-radius: 16px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(15,23,42,.04);}
-.stat .k {font-size: .75rem; color: var(--muted); font-weight: 500;}
-.stat .n {font-size: 1.85rem; font-weight: 800; line-height: 1.15; color: var(--ink); letter-spacing: -.03em;}
-.stat .n.warn {color: var(--danger);}
-.tile {width: 40px; height: 40px; border-radius: 12px; display:grid; place-items:center; font-size: 1.1rem;}
-.t-success {background: var(--success-soft);} .t-primary {background: var(--primary-soft);} .t-danger {background: var(--danger-soft);} .t-neutral {background: var(--subtle);}
-.notice {display:flex; gap:12px; align-items:center; border:1px solid var(--warn-line); background: #FFFBEB; color: var(--warn);
-         border-radius: 14px; padding: 11px 15px; margin-bottom: 14px; font-size: .9rem;}
+/* overview card */
+.overview {background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 22px 14px; margin: 4px 0 14px;
+           box-shadow: 0 1px 2px rgba(15,23,42,.04);}
+.ov-top {display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 12px; margin-bottom: 14px;}
+.ov-top > div {border-left: 2px solid var(--line); padding-left: 12px;}
+.ov-top > div:first-child {border-left-color: var(--primary);}
+.ov-n {font-size: 1.9rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.05; color: var(--ink);}
+.ov-n.warn {color: var(--danger);}
+.ov-k {font-size: .76rem; color: var(--muted); margin-top: 2px;}
+.bar {display:flex; height: 8px; border-radius: 999px; overflow: hidden; background: var(--subtle); gap: 2px;}
+.seg {display:block; min-width: 6px; background: var(--subtle);}
+.legend {display:flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: .78rem; color: var(--muted);}
+.legend b {color: var(--ink); font-weight: 600; margin-left: 2px;}
+.legend .muted {margin-left: auto;}
+.dot {display:inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; vertical-align: 0;}
+.s-pending {background: #A5B4FC;} .s-escalated {background: #F87171;} .s-approved {background: #34D399;}
+.s-rejected {background: #94A3B8;} .s-expired {background: #CBD5E1;}
+.tag {font-size: .64rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; margin-right: 10px; opacity: .85;}
+.notice {display:flex; align-items:baseline; border: 1px solid var(--warn-line); border-left: 4px solid #F59E0B; background: #FFFBEB;
+         color: var(--warn); border-radius: 12px; padding: 11px 15px; margin-bottom: 14px; font-size: .9rem;}
 
 /* segmented tabs */
 .stTabs [data-baseweb="tab-list"] {background: var(--subtle); border: 1px solid var(--line); border-radius: 14px; padding: 5px; gap: 4px;}
@@ -105,13 +114,13 @@ h1, h2, h3 {font-family: Inter, -apple-system, sans-serif !important; font-weigh
 .field .v.missing {color: var(--danger);}
 .quote {font-style: italic; font-size: 1rem; color: #334155; border-left: 3px solid var(--primary);
         background: linear-gradient(90deg, var(--primary-soft), rgba(238,242,255,0) 70%); padding: 8px 12px; border-radius: 0 10px 10px 0; margin: 4px 0 12px;}
-.conflict {background: var(--warn-soft); border: 1px solid var(--warn-line); color: var(--warn); border-radius: 10px; padding: 8px 12px;
+.conflict {background: var(--warn-soft); border: 1px solid var(--warn-line); border-left: 4px solid #F59E0B; color: var(--warn); border-radius: 10px; padding: 8px 12px;
            font-size: .86rem; margin-bottom: 10px;}
 .rules {font-size: .82rem; color: var(--muted); margin: 0; padding-left: 1.1rem;}
-.meta {font-size: .84rem; color: var(--muted); line-height: 1.75; background: var(--bg); border:1px solid var(--line);
-       border-radius: 12px; padding: 9px 12px; margin-bottom: 8px;}
-.meta b {color: var(--ink); font-weight: 600;}
-.meta code {background: transparent; color: var(--primary); font-size: .8rem;}
+.meta {display:grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0 0 10px; padding: 10px 14px; font-size: .84rem;
+       background: var(--bg); border: 1px solid var(--line); border-radius: 12px;}
+.meta dt {color: var(--muted); font-weight: 500;} .meta dd {margin: 0; color: var(--ink); font-weight: 600; overflow-wrap: anywhere;}
+.meta code {background: transparent; color: var(--primary); font-size: .8rem; padding: 0;}
 
 /* controls */
 .stButton > button, .stFormSubmitButton > button {border-radius: 10px; font-weight: 600; min-height: 42px;}
@@ -128,7 +137,8 @@ h1, h2, h3 {font-family: Inter, -apple-system, sans-serif !important; font-weigh
 </style>
 """.replace("DOTS", DOTS)
 
-st.set_page_config(page_title="Meeting-to-Action-Items Assistant", page_icon="✅", layout="wide")
+
+st.set_page_config(page_title="Meeting-to-Action-Items Assistant", page_icon=":material/task_alt:", layout="wide")
 st.markdown(CSS, unsafe_allow_html=True)
 ss = st.session_state
 ss.setdefault("clock_offset_h", 0)
@@ -165,9 +175,9 @@ def show_result(result: dict) -> None:
     if actions:
         text += "  ·  Jira action: " + ", ".join(f"`{status}`" for status in actions.values())
     if outcome in ("run_created", "approved", "rejected", "tick"):
-        st.success(text, icon="✅")
+        st.success(text)
     else:
-        st.warning(text, icon="⚠️")
+        st.warning(text)
 
 
 def pill(text: str) -> str:
@@ -180,9 +190,21 @@ def field(label: str, value: str | None) -> str:
             f'<div class="v{"" if value else " missing"}">{shown}</div></div>')
 
 
-def stat(label: str, value: int, icon: str, tile: str, warn: bool = False) -> str:
-    return (f'<div class="stat"><div><div class="k">{label}</div><div class="n{" warn" if warn else ""}">{value}</div></div>'
-            f'<div class="tile t-{tile}">{icon}</div></div>')
+def overview(counts: dict[str, int], jira: int, runs: int) -> str:
+    """One card: headline numbers and a stacked bar of every review by status."""
+    order = [("pending", "Pending"), ("escalated", "Escalated"), ("approved", "Approved"),
+             ("rejected", "Rejected"), ("expired", "Expired")]
+    total = sum(counts.values())
+    bar = "".join(f'<span class="seg s-{k}" style="flex:{counts.get(k, 0)}"></span>' for k, _ in order if counts.get(k))
+    legend = "".join(f'<span class="lg"><i class="dot s-{k}"></i>{label} <b>{counts.get(k, 0)}</b></span>' for k, label in order)
+    open_n = counts.get("pending", 0) + counts.get("escalated", 0)
+    return (f'<div class="overview"><div class="ov-top">'
+            f'<div><div class="ov-n">{open_n}</div><div class="ov-k">open reviews</div></div>'
+            f'<div><div class="ov-n{" warn" if counts.get("escalated") else ""}">{counts.get("escalated", 0)}</div><div class="ov-k">escalated</div></div>'
+            f'<div><div class="ov-n">{jira}</div><div class="ov-k">issues in Jira</div></div>'
+            f'<div><div class="ov-n">{runs}</div><div class="ov-k">runs</div></div></div>'
+            f'<div class="bar">{bar or "<span class=seg style=flex:1></span>"}</div>'
+            f'<div class="legend">{legend}<span class="lg muted">{total} reviews in total</span></div></div>')
 
 
 def side_heading(text: str) -> None:
@@ -192,7 +214,7 @@ def side_heading(text: str) -> None:
 # Every page load is a process start: finish or reconcile actions left open.
 recovered = workflow().resume()
 if recovered:
-    st.toast(f"Restart recovery finished {len(recovered)} open action(s): {', '.join(recovered.values())}", icon="🔁")
+    st.toast(f"Restart recovery finished {len(recovered)} open action(s): {', '.join(recovered.values())}", icon=":material/sync:")
 
 # ------------------------------------------------------------------ sidebar
 with st.sidebar:
@@ -217,15 +239,15 @@ with st.sidebar:
     st.caption(f"Simulated time **+{ss['clock_offset_h']} h** · {now:%a %d %b, %H:%M} UTC")
     hours = st.number_input("Advance by hours", min_value=1, max_value=200, value=25, step=1)
     c1, c2 = st.columns(2)
-    if c1.button("Advance", icon=":material/fast_forward:", width="stretch"):
+    if c1.button("Advance", width="stretch"):
         ss["clock_offset_h"] += int(hours)
         st.rerun()
-    if c2.button("Timer tick", key="tick", icon=":material/timer:", width="stretch"):
+    if c2.button("Timer tick", key="tick", width="stretch"):
         send({"event_id": f"tick-{uuid.uuid4().hex[:10]}", "type": "timer.tick", "payload": {}})
         st.rerun()
 
     st.divider()
-    if st.button("Reset demo data", icon=":material/restart_alt:", type="secondary", width="stretch"):
+    if st.button("Reset demo data", type="secondary", width="stretch"):
         shutil.rmtree(DATA_DIR, ignore_errors=True)
         for key in ("clock_offset_h", "messages", "last_transcript_event"):
             ss.pop(key, None)
@@ -254,18 +276,14 @@ if ss["messages"]:
 wf = workflow()
 open_reviews = wf.open_reviews()
 escalated = [r for r in open_reviews if r["status"] == "escalated"]
-st.markdown('<div class="stats">'
-            + stat("Open reviews", len(open_reviews), "🗂️", "neutral")
-            + stat("Escalated", len(escalated), "⏰", "danger" if escalated else "neutral", warn=bool(escalated))
-            + stat("Issues in Jira", wf.jira.count(), "🎫", "success")
-            + stat("Runs", wf.store.one("SELECT COUNT(*) AS n FROM runs")["n"], "📜", "primary")
-            + "</div>", unsafe_allow_html=True)
+counts = {r["status"]: r["n"] for r in wf.store.all("SELECT status, COUNT(*) AS n FROM reviews GROUP BY status")}
+st.markdown(overview(counts, wf.jira.count(), wf.store.one("SELECT COUNT(*) AS n FROM runs")["n"]), unsafe_allow_html=True)
 if escalated:
-    st.markdown(f'<div class="notice">⏰ <span><b>{len(escalated)} review(s) escalated to {html.escape(PROJECT_LEAD)}.</b> '
+    st.markdown(f'<div class="notice"><span class="tag">Escalated</span><span><b>{len(escalated)} review(s) escalated to {html.escape(PROJECT_LEAD)}.</b> '
                 "They expire 48 h after escalation, and the issue is then withheld.</span></div>", unsafe_allow_html=True)
 
-tab_new, tab_queue, tab_jira, tab_runs = st.tabs(["📝  New meeting", f"🧑‍⚖️  Review queue ({len(open_reviews)})",
-                                                  f"🎫  Simulated Jira ({wf.jira.count()})", "📜  Runs and audit"])
+tab_new, tab_queue, tab_jira, tab_runs = st.tabs(["New meeting", f"Review queue ({len(open_reviews)})",
+                                                  f"Simulated Jira ({wf.jira.count()})", "Runs and audit"])
 
 # ------------------------------------------------------------- new meeting
 with tab_new:
@@ -275,7 +293,7 @@ with tab_new:
         meeting_date = c2.date_input("Meeting date", value=date(2026, 10, 8))
         organizer = c3.selectbox("Organizer (reviewer)", PEOPLE, index=PEOPLE.index("shubhada"))
         transcript = st.text_area("Transcript", value=SAMPLE, height=130)
-        submitted = st.form_submit_button("Send transcript event", type="primary", icon=":material/send:")
+        submitted = st.form_submit_button("Send transcript event", type="primary")
     if submitted:
         event = {"event_id": f"evt-{uuid.uuid4().hex[:10]}", "type": "transcript.received",
                  "payload": {"meeting_id": meeting_id, "meeting_date": meeting_date.isoformat(),
@@ -287,14 +305,14 @@ with tab_new:
         c1, c2 = st.columns([3, 2], vertical_alignment="center")
         c1.caption(f"Last event sent: `{ss['last_transcript_event']['event_id']}`. "
                    "A webhook may deliver it twice; the inbox ignores the repeat.")
-        if c2.button("Deliver the same event again (webhook retry)", key="redeliver", icon=":material/replay:", width="stretch"):
+        if c2.button("Deliver the same event again (webhook retry)", key="redeliver", width="stretch"):
             send(ss["last_transcript_event"])
             st.rerun()
 
 # ------------------------------------------------------------ review queue
 with tab_queue:
     if not open_reviews:
-        st.info("No open reviews. Send a transcript event from **New meeting**.", icon="📭")
+        st.info("No open reviews. Send a transcript event from **New meeting**.", )
     for review in open_reviews:
         p = review["packet_json"]
         fields = p["proposed_action"]["fields"]
@@ -307,15 +325,16 @@ with tab_queue:
                     + f'<div class="quote">“{html.escape(p["evidence"]["quote"])}”</div>'
                     + '<div class="grid">' + field("Action", p["proposed_action"]["action"])
                     + field("Assignee", fields["assignee"]) + field("Due date", fields["due_date"]) + "</div>"
-                    + ('<div class="conflict">⚠️ ' + html.escape("; ".join(p["conflicts"])) + "</div>" if p["conflicts"] else "")
+                    + ('<div class="conflict"><span class="tag">Conflict</span>' + html.escape("; ".join(p["conflicts"])) + "</div>" if p["conflicts"] else "")
                     + '<ul class="rules">' + "".join(f"<li>{html.escape(r)}</li>" for r in p["rules"]) + "</ul>",
                     unsafe_allow_html=True)
             with right:
                 st.markdown(
-                    f'<div class="meta">👤 <b>{html.escape(review["assigned_to"])}</b> reviews · escalates to '
-                    f'<b>{html.escape(review["escalation_to"])}</b><br>'
-                    f'⏰ Deadline <b>{html.escape(review["deadline"].replace("T", " ").replace("Z", " UTC"))}</b><br>'
-                    f'🔒 Version <code>{html.escape(p["content_version"])}</code></div>',
+                    '<dl class="meta">'
+                    f'<dt>Reviewer</dt><dd>{html.escape(review["assigned_to"])}</dd>'
+                    f'<dt>Escalates to</dt><dd>{html.escape(review["escalation_to"])}</dd>'
+                    f'<dt>Deadline</dt><dd>{html.escape(review["deadline"].replace("T", " ").replace("Z", " UTC"))}</dd>'
+                    f'<dt>Version</dt><dd><code>{html.escape(p["content_version"])}</code></dd></dl>',
                     unsafe_allow_html=True)
                 with st.form(f"decide-{review['review_id']}", border=False):
                     c1, c2 = st.columns(2)
@@ -323,8 +342,8 @@ with tab_queue:
                     due = c2.text_input("Due date", value=fields["due_date"] or "", placeholder="Friday or 2026-10-16")
                     comment = st.text_input("Comment (optional)")
                     b1, b2 = st.columns(2)
-                    approve = b1.form_submit_button("Approve", type="primary", icon=":material/check:", width="stretch")
-                    reject = b2.form_submit_button("Reject", icon=":material/close:", width="stretch")
+                    approve = b1.form_submit_button("Approve", type="primary", width="stretch")
+                    reject = b2.form_submit_button("Reject", width="stretch")
                 if approve or reject:
                     edits = {k: v.strip() for k, v, old in (("owner", owner, fields["assignee"]), ("due_date", due, fields["due_date"]))
                              if v.strip() and v.strip() != (old or "")}
@@ -340,7 +359,7 @@ with tab_queue:
 with tab_jira:
     issues = wf.jira.issues()
     if not issues:
-        st.info("No issues yet. An issue is created only after a reviewer approves it.", icon="🎫")
+        st.info("No issues yet. An issue is created only after a reviewer approves it.")
     else:
         st.dataframe([{k: i[k] for k in ("key", "summary", "assignee", "due_date", "labels")} for i in issues],
                      width="stretch", hide_index=True,
@@ -352,10 +371,9 @@ with tab_jira:
 with tab_runs:
     runs = wf.store.all("SELECT run_id, meeting_id, status, updated_at FROM runs ORDER BY updated_at DESC")
     if not runs:
-        st.info("No runs yet.", icon="📜")
-    icons = {"completed": "🟢", "completed_with_items_needing_review": "🟠", "awaiting_review": "🔵", "failed": "🔴"}
+        st.info("No runs yet.")
     for run in runs:
-        with st.expander(f"{icons.get(run['status'], '⚪')} {run['run_id']} · {run['meeting_id']} · {run['status']}"):
+        with st.expander(f"{run['run_id']} · {run['meeting_id']} · {run['status']}"):
             st.markdown("**Reviews**")
             st.dataframe(wf.store.all("SELECT review_id, status, assigned_to, deadline FROM reviews WHERE run_id = ?",
                                       run["run_id"]), width="stretch", hide_index=True)
@@ -368,6 +386,6 @@ with tab_runs:
             st.markdown("**Audit trail**")
             st.dataframe([{k: e.get(k) for k in ("timestamp", "step", "event", "candidate_id", "result", "reason", "error")}
                           for e in events], width="stretch", hide_index=True)
-    with st.expander("📥 Event inbox (every event_id and its outcome)"):
+    with st.expander("Event inbox (every event_id and its outcome)"):
         st.dataframe(wf.store.all("SELECT event_id, type, received_at, outcome FROM inbox ORDER BY received_at DESC"),
                      width="stretch", hide_index=True)
