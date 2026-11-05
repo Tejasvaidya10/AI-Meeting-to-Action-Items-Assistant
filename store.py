@@ -1,7 +1,6 @@
 """Durable workflow state (SQLite), so a pending review survives a restart.
 
-runs      one row per run: status plus the full RunState JSON; at most one live
-          (not failed) run per meeting + transcript, so a failed run can be resent
+runs      one row per run: status plus the full RunState JSON
 reviews   one row per candidate awaiting a human: the review packet, its
           deadline, who may decide, and the recorded decision/authorization
 actions   outbox of external effects keyed by idempotency key; a row is
@@ -17,13 +16,10 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-RUNS_TABLE = """CREATE TABLE IF NOT EXISTS runs (
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS runs (
     run_id TEXT PRIMARY KEY, meeting_id TEXT, transcript_sha256 TEXT, status TEXT,
-    state_json TEXT, updated_at TEXT)"""
-
-SCHEMA = RUNS_TABLE + """;
-CREATE UNIQUE INDEX IF NOT EXISTS runs_one_live_run_per_transcript
-    ON runs (meeting_id, transcript_sha256) WHERE status <> 'failed';
+    state_json TEXT, updated_at TEXT, UNIQUE (meeting_id, transcript_sha256));
 CREATE TABLE IF NOT EXISTS reviews (
     review_id TEXT PRIMARY KEY, run_id TEXT, candidate_id TEXT, status TEXT,
     assigned_to TEXT, escalation_to TEXT, deadline TEXT, packet_json TEXT,
@@ -45,19 +41,7 @@ class Store:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(self.db_path, isolation_level=None)  # explicit transactions only
         self.conn.row_factory = sqlite3.Row
-        self._migrate()
         self.conn.executescript(SCHEMA)
-
-    def _migrate(self) -> None:
-        """Older databases made (meeting_id, transcript_sha256) UNIQUE for every run, which blocked
-        resending a transcript whose run failed. Rebuild that table without it, keeping every row."""
-        row = self.conn.execute("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'runs'").fetchone()
-        if row and "UNIQUE" in row["sql"]:
-            with self.transaction():
-                self.conn.execute("ALTER TABLE runs RENAME TO runs_before_migration")
-                self.conn.execute(RUNS_TABLE)
-                self.conn.execute("INSERT INTO runs SELECT * FROM runs_before_migration")
-                self.conn.execute("DROP TABLE runs_before_migration")
 
     def transaction(self) -> "Transaction":
         return Transaction(self.conn)

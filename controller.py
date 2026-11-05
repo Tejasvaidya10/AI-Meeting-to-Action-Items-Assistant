@@ -110,18 +110,21 @@ class Workflow:
         if missing:
             return {"outcome": "malformed", "detail": f"missing {', '.join(missing)}"}
         sha = hashlib.sha256(p["transcript"].encode("utf-8")).hexdigest()
-        # Only a live run makes a resend a duplicate; after a failed run the organizer may resend.
-        existing = self.store.one("SELECT run_id FROM runs WHERE meeting_id = ? AND transcript_sha256 = ?"
-                                  " AND status <> 'failed'", p["meeting_id"], sha)
-        if existing:  # same meeting resent under a new event_id (e.g. webhook redelivery)
+        existing = self.store.one("SELECT run_id, status FROM runs WHERE meeting_id = ? AND transcript_sha256 = ?",
+                                  p["meeting_id"], sha)
+        if existing and existing["status"] != "failed":  # same meeting resent under a new event_id (e.g. webhook redelivery)
             return {"outcome": "duplicate_content", "run_id": existing["run_id"]}
 
         run = run_workflow(p["transcript"], p["meeting_date"], self.extractor,
                            open_titles=set(p.get("open_titles") or []), log_dir=self.log_dir)
         state = RunState.model_validate(run)
-        if state.status == "failed":  # the failed run is kept for the audit trail
+        if existing:  # a resend after a failed run replaces that row; its events stay in this run's history
+            state.events = self._load_run(existing["run_id"]).events + state.events
+            self.audit.log(state, "input_check", "resend_after_failed_run", previous_run_id=existing["run_id"])
+            self.store.execute("DELETE FROM runs WHERE run_id = ?", existing["run_id"])
+        if state.status == "failed":
             self.audit.log(state, "monitoring", "alert", reason=state.error, next="organizer resends the transcript")
-            self.audit.snapshot(state)
+        self.audit.snapshot(state)
         self.store.execute("INSERT INTO runs VALUES (?, ?, ?, ?, ?, ?)", state.run_id, p["meeting_id"],
                            sha, state.status, state.model_dump_json(), iso(now))
         if state.status == "failed":

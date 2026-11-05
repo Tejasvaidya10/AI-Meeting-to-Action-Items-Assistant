@@ -2,16 +2,13 @@
 
 Every effect is verified in the receiver: SimulatedJira's own SQLite file.
 """
-import sqlite3
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 import pytest
 
 from controller import SimulatedCrash, Workflow
 from jira_sim import SimulatedJira
 from meeting_assistant import Extraction
-from store import Store
 
 TRANSCRIPT = ("Priya will update the API error messages by Friday. "
               "Someone should clean up the onboarding notes soon.")
@@ -119,6 +116,16 @@ def test_project_lead_can_decide_after_escalation(clock):
     assert wf.handle(decide(wf, run["reviews"][0], reviewer="kriday"))["outcome"] == "approved"
     assert wf.jira.count() == 1
 
+    # The deadlines also apply when no tick has run since they passed.
+    lead_review, organizer_review = ingest(wf, event_id="evt-t2", meeting_id="m-2")["reviews"]
+    clock.advance(hours=25)
+    assert wf.handle(decide(wf, lead_review, reviewer="kriday"))["outcome"] == "approved"
+    clock.advance(hours=48)  # 73 h: the review window has closed
+    assert wf.handle(decide(wf, organizer_review))["outcome"] == "late_ignored"
+    assert wf.review(organizer_review)["status"] == "expired"
+    assert action_status(wf, organizer_review) is None
+    assert wf.jira.count() == 2
+
 
 def test_missing_decision_never_creates_a_task(clock):
     wf = make_wf(clock)
@@ -131,65 +138,6 @@ def test_missing_decision_never_creates_a_task(clock):
     assert wf.store.all("SELECT * FROM actions") == []
     assert {r["status"] for r in wf.store.all("SELECT status FROM reviews")} == {"expired"}
     assert wf.jira.count() == 0
-
-
-def test_deadlines_apply_to_decisions_even_if_no_tick_has_run(clock):
-    wf = make_wf(clock)
-    lead_review, organizer_review = ingest(wf)["reviews"]
-
-    clock.advance(hours=25)  # escalation is due, but the timer never fired
-    assert wf.handle(decide(wf, lead_review, reviewer="kriday"))["outcome"] == "approved"
-    assert wf.jira.count() == 1
-
-    clock.advance(hours=48)  # 73 h: the review window has closed, still no tick
-    late = wf.handle(decide(wf, organizer_review))
-    assert late["outcome"] == "late_ignored"
-    assert wf.review(organizer_review)["status"] == "expired"
-    assert action_status(wf, organizer_review) is None
-    assert wf.jira.count() == 1
-
-
-# ---- Failed extraction ----------------------------------------------------
-def test_failed_extraction_alerts_and_can_be_resent(clock):
-    def invalid_reply(_):  # what a schema-invalid model reply raises, on the first try and the retry
-        return Extraction.model_validate_json('{"summary": 1}')
-
-    def outage(_):  # an API error or timeout, as opposed to a bad reply
-        raise ConnectionError("model API unreachable")
-
-    wf = Workflow("data/workflow.db", jira=SimulatedJira("data/jira_sim.db"), clock=clock, extractor=outage)
-    with pytest.raises(ConnectionError):  # nothing is recorded, so the same delivery can be retried
-        ingest(wf)
-    assert wf.store.all("SELECT * FROM inbox") == [] and wf.store.all("SELECT * FROM runs") == []
-
-    wf.extractor = invalid_reply
-    failed = ingest(wf)
-    assert failed["outcome"] == "run_failed"
-    failed_row = wf.store.one("SELECT * FROM runs WHERE run_id = ?", failed["run_id"])
-    assert failed_row["status"] == "failed"
-    assert any(e["event"] == "alert" for e in failed_row["state_json"]["events"])
-
-    wf = make_wf(clock)  # the model works again and the organizer resends the same transcript
-    resent = ingest(wf, event_id="evt-t2")
-    assert resent["outcome"] == "run_created" and resent["run_id"] != failed["run_id"]
-    assert ingest(wf, event_id="evt-t3")["outcome"] == "duplicate_content"  # a live run exists now
-    assert sorted(r["status"] for r in wf.store.all("SELECT status FROM runs")) == ["awaiting_review", "failed"]
-
-
-def test_older_database_is_migrated_so_a_failed_run_can_be_resent():
-    Path("data").mkdir()
-    old = sqlite3.connect("data/workflow.db")
-    old.execute("CREATE TABLE runs (run_id TEXT PRIMARY KEY, meeting_id TEXT, transcript_sha256 TEXT, status TEXT,"
-                " state_json TEXT, updated_at TEXT, UNIQUE (meeting_id, transcript_sha256))")
-    old.execute("INSERT INTO runs VALUES ('run-old', 'm-1', 'sha', 'failed', '{}', '2026-10-08T15:00:00Z')")
-    old.commit()
-    old.close()
-
-    store = Store("data/workflow.db")
-    assert [r["run_id"] for r in store.all("SELECT run_id FROM runs")] == ["run-old"]  # rows kept
-    store.execute("INSERT INTO runs VALUES ('run-new', 'm-1', 'sha', 'awaiting_review', '{}', 'now')")
-    with pytest.raises(sqlite3.IntegrityError):  # still only one live run per transcript
-        store.execute("INSERT INTO runs VALUES ('run-dup', 'm-1', 'sha', 'awaiting_review', '{}', 'now')")
 
 
 # ---- Case 3: duplicate events and retries ---------------------------------
@@ -238,6 +186,30 @@ def test_retry_limit_fails_and_alerts(clock):
     events = wf.store.one("SELECT state_json FROM runs")["state_json"]["events"]
     assert any(e["event"] == "alert" for e in events)
     assert wf.jira.count() == 0
+
+    # The model step has its own limit: one schema retry, then the run fails and alerts.
+    def outage(_):  # API error or timeout: nothing is recorded, so the same delivery can be retried
+        raise ConnectionError("model API unreachable")
+
+    def invalid_reply(_):  # a schema-invalid reply, on the first try and on the retry
+        return Extraction.model_validate_json('{"summary": 1}')
+
+    wf.extractor = outage
+    with pytest.raises(ConnectionError):
+        ingest(wf, event_id="evt-m2", meeting_id="m-2")
+    assert wf.store.one("SELECT * FROM inbox WHERE event_id = 'evt-m2'") is None
+    wf.extractor = invalid_reply
+    failed = ingest(wf, event_id="evt-m2", meeting_id="m-2")
+    assert failed["outcome"] == "run_failed"
+    assert any(e["event"] == "alert" for e in wf._load_run(failed["run_id"]).events)
+
+    wf = make_wf(clock)  # model healthy again; the organizer resends the same transcript
+    resent = ingest(wf, event_id="evt-m2-resend", meeting_id="m-2")
+    assert resent["outcome"] == "run_created"
+    rows = wf.store.all("SELECT * FROM runs WHERE meeting_id = 'm-2'")
+    assert [r["run_id"] for r in rows] == [resent["run_id"]]  # still one run per meeting + transcript
+    assert any(e["event"] == "alert" for e in rows[0]["state_json"]["events"])  # failed attempt kept in history
+    assert ingest(wf, event_id="evt-m2-again", meeting_id="m-2")["outcome"] == "duplicate_content"
 
 
 # ---- Case 4: interruption/resume and uncertain outcome ---------------------
