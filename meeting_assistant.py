@@ -14,6 +14,7 @@ from typing import Any, Callable, Literal
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from audit import AuditLogger
+from controls import guard_candidates, redact, suspicious_sentences
 from state import RunState
 
 
@@ -44,6 +45,7 @@ class CandidateResult(BaseModel):
     reasons: list[str]
     review_status: Literal["needs_review", "approved", "rejected", "expired"] = "needs_review"
     jira_result: str | None = None
+    policy_blocks: list[str] = Field(default_factory=list)
 
 
 DIRECTORY = {
@@ -135,6 +137,15 @@ def run_workflow(transcript: str, meeting_date: str, extractor: Callable[[str], 
     state.set_status("input_validated")
     audit.log(state, "input_check", "input_valid")
 
+    # Control B: mask sensitive values before the transcript leaves our system or is stored.
+    transcript, redacted = redact(transcript)
+    if redacted:
+        audit.log(state, "data_protection", "sensitive_data_redacted", counts=redacted)
+    # Control A (part 1): note instruction-like sentences in the untrusted transcript.
+    suspicious = suspicious_sentences(transcript)
+    if suspicious:
+        audit.log(state, "security", "untrusted_instructions_detected", sentences=len(suspicious))
+
     state.increment_retry("model_extraction")
     audit.log(state, "model_extraction", "model_call_started", attempt=1)
     try:
@@ -157,8 +168,16 @@ def run_workflow(transcript: str, meeting_date: str, extractor: Callable[[str], 
 
     candidates = validate_candidates(extraction, date.fromisoformat(meeting_date), open_titles)
     state.candidates = [c.model_dump() for c in candidates]
-    for c in candidates:
-        audit.log(state, "validation", "validated", candidate_id=c.candidate_id, result=c.validation, reasons=c.reasons)
+    # Control A (part 2): a candidate whose evidence is not in the transcript, or that carries
+    # instruction-like text, is blocked from Jira. The reviewer cannot override this.
+    if guard_candidates(state.candidates, transcript):
+        for c in state.candidates:
+            if c["policy_blocks"]:
+                audit.log(state, "security", "candidate_blocked_by_policy", candidate_id=c["candidate_id"],
+                          result="BLOCKED", reasons=c["policy_blocks"])
+        audit.log(state, "monitoring", "alert", reason="untrusted content blocked; security owner to review")
+    for c in state.candidates:
+        audit.log(state, "validation", "validated", candidate_id=c["candidate_id"], result=c["validation"], reasons=c["reasons"])
     state.set_status("awaiting_review")
     audit.log(state, "human_review", "awaiting_review", candidates=len(candidates), flagged=sum(c.validation == "FLAG" for c in candidates))
     audit.snapshot(state)
@@ -190,6 +209,10 @@ def submit_review(run: dict[str, Any], approve: set[str], log_dir: str | Path = 
             candidate["review_status"] = "needs_review"
         audit.log(state, "human_review", "review_decision", candidate_id=cid, result=candidate["review_status"])
         missing = [field for field, key in (("owner", "owner_id"), ("due date", "due_date")) if not candidate[key]]
+        if candidate["review_status"] == "approved" and candidate.get("policy_blocks"):
+            candidate["review_status"] = "needs_review"
+            audit.log(state, "approval_guard", "blocked", candidate_id=cid, result="BLOCKED", reason="policy: " + "; ".join(candidate["policy_blocks"]))
+            continue
         if candidate["review_status"] != "approved":
             audit.log(state, "approval_guard", "blocked", candidate_id=cid, result="BLOCKED", reason=f"review_status={candidate['review_status']}")
         elif missing:

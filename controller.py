@@ -14,11 +14,13 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable
 
 from audit import AuditLogger
+from controls import check_outbound
 from jira_sim import JiraConfirmationLost, JiraUnavailable, SimulatedJira
 from meeting_assistant import DIRECTORY, Extraction, _parse_due_date, run_workflow
 from mock_extractor import mock_extractor
@@ -37,9 +39,15 @@ RULES = {
     "owner": "R2 The assignee must resolve to a person in the project directory.",
     "due date": "R3 The due date must normalize to a calendar date.",
     "duplicate": "R4 A likely duplicate of an open task needs the reviewer to confirm it is new.",
+    "policy": "R5 A task whose evidence is not in the transcript, or that carries instructions, never goes to Jira.",
 }
 OPEN_REVIEW = ("pending", "escalated")
 OPEN_ACTION = ("queued", "sending", "uncertain")
+
+
+def paused() -> bool:
+    """Stop switch: set MTA_PAUSED=1 (or create data/PAUSED) to stop model calls and Jira writes at once."""
+    return os.getenv("MTA_PAUSED") == "1" or Path("data/PAUSED").exists()
 
 
 class SimulatedCrash(RuntimeError):
@@ -77,6 +85,9 @@ class Workflow:
         payload = event.get("payload") or {}
         if not event_id:
             return {"outcome": "malformed", "detail": "missing event_id (cannot be deduplicated)"}
+        if etype == "transcript.received" and paused():
+            # Not recorded in the inbox, so the sender's redelivery is processed after the pause.
+            return {"event_id": event_id, "outcome": "paused", "detail": "system paused; no model call made"}
         seen = self.store.one("SELECT * FROM inbox WHERE event_id = ?", event_id)
         if seen:
             return {"event_id": event_id, "outcome": "duplicate_ignored", "first_outcome": seen["outcome"]}
@@ -168,6 +179,14 @@ class Workflow:
 
         state = self._load_run(review["run_id"])
         cand = next(c for c in state.candidates if c["candidate_id"] == review["candidate_id"])
+        if p["decision"] == "approve" and cand.get("policy_blocks"):
+            # Control A: an approval cannot override a policy block (edits do not clear it either).
+            self.audit.log(state, "security", "approval_refused_by_policy", candidate_id=cand["candidate_id"],
+                           review_id=review["review_id"], result="BLOCKED", reviewer=p["reviewer"],
+                           reasons=cand["policy_blocks"])
+            self._save_run(state, now)
+            return {"outcome": "blocked_by_policy", "review_id": review["review_id"],
+                    "detail": "; ".join(cand["policy_blocks"])}
         decision = {"decision": p["decision"], "reviewer": p["reviewer"], "decided_at": iso(now),
                     "reviewed_version": p["content_version"], "comment": p.get("comment")}
         if p["decision"] == "reject":
@@ -232,6 +251,8 @@ class Workflow:
         action = self.store.one("SELECT * FROM actions WHERE idempotency_key = ?", key)
         if action["status"] not in OPEN_ACTION:
             return action["status"]
+        if paused():
+            return "paused"  # the row stays queued; resume() or the next tick sends it after the pause
         if action["status"] in ("sending", "uncertain"):
             # A previous attempt may have reached Jira: look before sending again.
             found = self.jira.find_by_idempotency_key(key)
@@ -244,6 +265,9 @@ class Workflow:
             return self._finish(action, now, "blocked", error="content changed after approval")
         if now > parse_time(auth["expires_at"]):
             return self._finish(action, now, "blocked", error="approval expired before execution; re-review required")
+        problems = check_outbound(proposed["fields"])  # Controls A + B: last check on the exact fields sent
+        if problems:
+            return self._finish(action, now, "blocked", error="outbound policy: " + "; ".join(problems))
         if action["attempts"] >= MAX_ATTEMPTS:
             return self._finish(action, now, "failed", error=f"gave up after {MAX_ATTEMPTS} attempts")
 

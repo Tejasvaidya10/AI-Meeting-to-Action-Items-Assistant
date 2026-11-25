@@ -96,6 +96,24 @@ The review packet shows the proposed action and target, the exact fields to send
 
 Design details, state tables and the oversight approach are in [`docs/M3_design.md`](docs/M3_design.md).
 
+## Milestone 4: security and data controls
+
+Two controls run in code (`controls.py`), outside the model prompt:
+
+| Control | Where it runs | What it stops |
+|---|---|---|
+| A. Untrusted-content guard | after validation (`run_workflow`), at approval (`Workflow._on_decision`), and on the exact fields just before Jira (`Workflow._execute`) | tasks whose evidence is not in the transcript, and tasks carrying instruction-like text ("ignore previous instructions", "auto-approve", "admin access", links). A reviewer cannot approve them, even with edits. |
+| B. Sensitive-data redaction | before the model call and before anything is stored | e-mail addresses, phone numbers, SSN-like and card numbers, API keys, spoken passwords. Only counts per type are logged. |
+
+```bash
+pytest -q test_m4_controls.py     # 9 tests: a blocked and a normal case for each control
+python m4_controls_demo.py        # prints both cases per control (saved in evidence/m4_controls.txt)
+```
+
+**Stop switch:** set `MTA_PAUSED=1` (or create `data/PAUSED`) to stop model calls and Jira writes at once. Approved actions stay queued and are sent by `python cli.py resume` after the pause.
+
+All test values (SSN, e-mail, keys) are made up.
+
 ## Evidence
 
 Saved outputs quoted in the Milestone 3 report:

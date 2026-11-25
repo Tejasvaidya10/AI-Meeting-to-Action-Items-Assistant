@@ -266,6 +266,8 @@ MESSAGES = {
     "tick": "Timer processed: {escalated} review(s) escalated, {expired} expired.",
     "duplicate_ignored": "Duplicate event ignored. This event ID was already processed, so nothing changed.",
     "duplicate_content": "This meeting was already processed under another event ID. No new run was created.",
+    "paused": "The system is paused by an operator. Nothing was sent; the transcript will be processed after the pause.",
+    "blocked_by_policy": "Blocked by policy. This task is not supported by the transcript or contains instructions, so it cannot be approved. The security owner has been alerted.",
     "needs_changes": "Needs changes. Set an owner and a due date before approving.",
     "unauthorized": "Not authorized. Only the assigned reviewer, or the project lead after escalation, can decide.",
     "stale_version": "The item changed after you opened it. Review the current version and decide again.",

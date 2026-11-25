@@ -1,0 +1,11 @@
+test_m4_controls.py::test_A_blocked_injected_tasks_never_reach_jira_even_when_approved PASSED [ 10%]
+test_m4_controls.py::test_A_normal_meeting_still_creates_its_issues PASSED [ 20%]
+test_m4_controls.py::test_A_final_check_blocks_a_tampered_outbox_row PASSED [ 30%]
+test_m4_controls.py::test_A_real_model_outputs_are_not_blocked PASSED    [ 40%]
+test_m4_controls.py::test_B_blocked_sensitive_values_never_leave_or_get_stored PASSED [ 50%]
+test_m4_controls.py::test_B_normal_meeting_is_sent_unchanged PASSED      [ 60%]
+test_m4_controls.py::test_B_dates_and_numbers_are_not_redacted[Due 2026-10-16.] PASSED [ 70%]
+test_m4_controls.py::test_B_dates_and_numbers_are_not_redacted[Sprint 42 has 8 points.] PASSED [ 80%]
+test_m4_controls.py::test_B_dates_and_numbers_are_not_redacted[Room 3-101 at 10:30.] PASSED [ 90%]
+test_m4_controls.py::test_stop_switch_halts_model_and_jira_then_resumes PASSED [100%]
+50 passed in 4.83s
