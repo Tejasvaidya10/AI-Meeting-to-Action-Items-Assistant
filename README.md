@@ -23,11 +23,11 @@ Requires Python 3.11+ (tested on 3.13). No API key is needed for the tests or th
 ```bash
 git clone https://github.com/Tejasvaidya10/AI-Meeting-to-Action-Items-Assistant.git
 cd AI-Meeting-to-Action-Items-Assistant
-git checkout shubhada/m3-hitl-events
+
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 python -m pip install -r requirements.txt
 
-pytest -q                       # 40 tests, all passing
+pytest -q                       # 50 tests, all passing
 python m3_scenarios.py          # the four Milestone 3 report cases
 python evidence/cli_drill.py    # full CLI walk-through as separate processes
 ```
@@ -106,7 +106,7 @@ Two controls run in code (`controls.py`), outside the model prompt:
 | B. Sensitive-data redaction | before the model call and before anything is stored | e-mail addresses, phone numbers, SSN-like and card numbers, API keys, spoken passwords. Only counts per type are logged. |
 
 ```bash
-pytest -q test_m4_controls.py     # 9 tests: a blocked and a normal case for each control
+pytest -q test_m4_controls.py     # 10 tests: a blocked and a normal case for each control, plus the stop switch
 python m4_controls_demo.py        # prints both cases per control (saved in evidence/m4_controls.txt)
 ```
 
@@ -164,6 +164,7 @@ python demo.py          # one PASS and one FLAG candidate, guard and audit trail
 | `m3_scenarios.py`, `evidence/` | Report cases and saved outputs |
 | `sample_events/` | Example events for the CLI |
 | `test_m3_workflow.py`, `test_app.py`, `test_run_state.py`, `test_meeting_assistant.py` | 17 + 8 + 11 + 4 tests |
+| `controls.py`, `test_m4_controls.py`, `m4_controls_demo.py` | Milestone 4 controls, their tests, and the evidence demo |
 | `app.py`, `.streamlit/config.toml` | Streamlit reviewer app (Milestone 3 workflow) and its theme |
 | `demo.py`, `state.py`, `audit.py` | Milestone 2 demo, run state, audit log |
 | `docs/M3_design.md` | Milestone 3 design notes |
